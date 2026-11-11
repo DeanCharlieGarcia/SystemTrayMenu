@@ -1,10 +1,10 @@
-﻿// <copyright file="ScaleDouble.cs" company="PlaceholderCompany">
+// <copyright file="ScaleDouble.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2023-2023 Peter Kirmeier
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System;
     using System.Windows.Markup;

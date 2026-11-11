@@ -1,10 +1,10 @@
-﻿// <copyright file="AboutBox.xaml.cs" company="PlaceholderCompany">
+// <copyright file="AboutBox.xaml.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2022-2023 Peter Kirmeier
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Collections.Specialized;
@@ -19,8 +19,8 @@ namespace SystemTrayMenu.UserInterface
     using System.Windows.Documents;
     using System.Windows.Input;
     using System.Windows.Threading;
+    using HitNGone.Utilities;
     using Microsoft.Win32;
-    using SystemTrayMenu.Utilities;
 
     /// <summary>
     /// Logic of About window.

@@ -1,10 +1,10 @@
-﻿// <copyright file="TaskbarLogo.xaml.cs" company="PlaceholderCompany">
+// <copyright file="TaskbarLogo.xaml.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2022-2023 Peter Kirmeier
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Reflection;

@@ -1,8 +1,8 @@
-﻿// <copyright file="CustomSettingsProvider.cs" company="PlaceholderCompany">
+// <copyright file="CustomSettingsProvider.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Properties
+namespace HitNGone.Properties
 {
     using System;
     using System.Collections.Generic;
@@ -12,7 +12,7 @@ namespace SystemTrayMenu.Properties
     using System.Linq;
     using System.Reflection;
     using System.Xml.Linq;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.Utilities;
 
     internal class CustomSettingsProvider : SettingsProvider
     {
@@ -42,7 +42,7 @@ namespace SystemTrayMenu.Properties
         public static string UserConfigPath => Path.Combine(
                 Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                $"SystemTrayMenu"),
+                $"HitNGone"),
                 $"user-{Environment.MachineName}.config");
 
         public static string? ConfigPathAssembly
@@ -285,6 +285,11 @@ namespace SystemTrayMenu.Properties
                 }
             }
 
+            if (xDocument != null)
+            {
+                LegacySettings.Normalize(xDocument, AppContext.BaseDirectory);
+            }
+
             return xDocument;
         }
 
@@ -293,6 +298,17 @@ namespace SystemTrayMenu.Properties
         /// </summary>
         private void LoadValuesFromFile()
         {
+            string legacyPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "SystemTrayMenu",
+                $"user-{Environment.MachineName}.config");
+            string? legacyDirectory = new[]
+            {
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            }.Select(directory => Path.Combine(directory, "SystemTrayMenu"))
+                .FirstOrDefault(directory => File.Exists(Path.Combine(directory, "SystemTrayMenu.exe")));
+            LegacySettings.Import(legacyPath, UserConfigPath, legacyDirectory);
             CreateEmptyConfigIfNotExists(UserConfigPath);
 
             // load the xml

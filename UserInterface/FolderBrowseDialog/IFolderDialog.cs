@@ -1,8 +1,8 @@
-﻿// <copyright file="IFolderDialog.cs" company="PlaceholderCompany">
+// <copyright file="IFolderDialog.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.UserInterface.FolderBrowseDialog
+namespace HitNGone.UserInterface.FolderBrowseDialog
 {
     using System.Windows;
 

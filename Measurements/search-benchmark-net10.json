@@ -1,0 +1,17 @@
+{
+  "measuredUtc": "2026-11-11T09:40:58.1739173Z",
+  "framework": ".NET 10.0.15",
+  "rows": 2000,
+  "iterations": 100,
+  "legacy": {
+    "milliseconds": 66.2038,
+    "allocatedBytes": 59200080,
+    "matches": 200000
+  },
+  "optimized": {
+    "milliseconds": 18.8013,
+    "allocatedBytes": 80,
+    "matches": 200000
+  },
+  "scope": "Search predicate only; excludes WPF rendering, file IO and full application opening."
+}

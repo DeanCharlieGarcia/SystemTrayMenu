@@ -1,10 +1,10 @@
-﻿// <copyright file="HotkeySelector.cs" company="PlaceholderCompany">
+// <copyright file="HotkeySelector.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Origin of some parts: http://www.codeproject.com/KB/buttons/hotkeycontrol.aspx
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Collections.Generic;
@@ -13,9 +13,9 @@ namespace SystemTrayMenu.UserInterface
     using System.Windows.Controls;
     using System.Windows.Input;
     using System.Windows.Media;
-    using SystemTrayMenu.Helpers;
-    using SystemTrayMenu.Utilities;
-    using static SystemTrayMenu.Helpers.GlobalHotkeys;
+    using HitNGone.Helpers;
+    using HitNGone.Utilities;
+    using static HitNGone.Helpers.GlobalHotkeys;
 
     public sealed class HotkeySelector : TextBox
     {

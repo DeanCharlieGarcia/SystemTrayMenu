@@ -1,8 +1,8 @@
-﻿// <copyright file="Menu.cs" company="PlaceholderCompany">
+// <copyright file="Menu.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.DllImports
+namespace HitNGone.DllImports
 {
     using System;
     using System.Runtime.InteropServices;

@@ -1,8 +1,8 @@
-﻿// <copyright file="JoystickHelper.cs" company="PlaceholderCompany">
+// <copyright file="JoystickHelper.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Helpers
+namespace HitNGone.Helpers
 {
     using System;
     using System.Threading;

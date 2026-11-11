@@ -1,13 +1,14 @@
-﻿// <copyright file="IconReader.cs" company="PlaceholderCompany">
+// <copyright file="IconReader.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 // see also: https://www.codeproject.com/Articles/2532/Obtaining-and-managing-file-and-folder-icons-using.
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Drawing;
     using System.IO;
     using System.Runtime.InteropServices;
@@ -15,8 +16,8 @@ namespace SystemTrayMenu.Utilities
     using System.Windows;
     using System.Windows.Interop;
     using System.Windows.Media.Imaging;
-    using SystemTrayMenu.DllImports;
-    using SystemTrayMenu.Helpers;
+    using HitNGone.DllImports;
+    using HitNGone.Helpers;
 
     /// <summary>
     /// Provides static methods to read system icons for folders and files.
@@ -27,18 +28,32 @@ namespace SystemTrayMenu.Utilities
         internal static readonly BitmapSource NotFoundImage = (BitmapSource)Application.Current.Resources["NotFoundIconImage"];
         private static readonly BitmapSource OverlayImage = (BitmapSource)Application.Current.Resources["LinkArrowIconImage"];
 
-        private static readonly ConcurrentDictionary<string, BitmapSource> IconDictPersistent = new();
-        private static readonly ConcurrentDictionary<string, BitmapSource> IconDictCache = new();
-        private static readonly BlockingCollection<Action> IconFactoryQueueSTA = new();
-        private static readonly List<Thread> IconFactoryThreadPoolSTA = new(16);
+        private static readonly BoundedCache<string, BitmapSource> IconDictPersistent = new(
+            () => Properties.Settings.Default.ClearCacheIfMoreThanThisNumberOfItems, StringComparer.OrdinalIgnoreCase);
+
+        private static readonly BoundedCache<string, BitmapSource> IconDictCache = new(
+            () => Properties.Settings.Default.ClearCacheIfMoreThanThisNumberOfItems, StringComparer.OrdinalIgnoreCase);
+
+        private static readonly ConcurrentDictionary<string, Lazy<BitmapSource>> PendingIcons = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly BlockingCollection<Action> IconFactoryQueueSTA = new(256);
+        private static readonly List<Thread> IconFactoryThreadPoolSTA = new(2);
+        private static readonly CancellationTokenSource ShutdownToken = new();
+        private static readonly object CacheSync = new();
+        private static long cacheGeneration;
+
+        internal static int CachedIconCount => IconDictCache.Count + IconDictPersistent.Count;
 
         internal static void Startup()
         {
+            LoadingImage.Freeze();
+            NotFoundImage.Freeze();
+            OverlayImage.Freeze();
             for (int i = 0; i < IconFactoryThreadPoolSTA.Capacity; i++)
             {
                 Thread thread = new(IconFactoryWorkerSTA)
                 {
                     Name = "IconFactory STA #" + i.ToString(),
+                    IsBackground = true,
                 };
                 thread.SetApartmentState(ApartmentState.STA);
                 thread.Start();
@@ -47,19 +62,20 @@ namespace SystemTrayMenu.Utilities
 
             static void IconFactoryWorkerSTA()
             {
-                while (true)
+                foreach (Action work in IconFactoryQueueSTA.GetConsumingEnumerable())
                 {
-                    try
+                    if (ShutdownToken.IsCancellationRequested)
                     {
-                        IconFactoryQueueSTA.Take()();
-                    }
-                    catch (ThreadInterruptedException)
-                    {
-                        // Shutdown
                         break;
                     }
-                    catch
+
+                    try
                     {
+                        work();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warn("Failed to load an icon.", ex);
                     }
                 }
             }
@@ -67,29 +83,46 @@ namespace SystemTrayMenu.Utilities
 
         internal static void Shutdown()
         {
+            ShutdownToken.Cancel();
+            IconFactoryQueueSTA.CompleteAdding();
             foreach (Thread thread in IconFactoryThreadPoolSTA)
             {
-                thread.Interrupt();
-            }
-
-            foreach (Thread thread in IconFactoryThreadPoolSTA)
-            {
-                thread.Join(400);
+                thread.Join(50);
             }
 
             IconFactoryThreadPoolSTA.Clear();
+            while (IconFactoryQueueSTA.TryTake(out _))
+            {
+            }
+
+            PendingIcons.Clear();
         }
 
         internal static void ClearCacheWhenLimitReached()
         {
-            if (IconDictCache.Count > Properties.Settings.Default.ClearCacheIfMoreThanThisNumberOfItems)
+            IconDictCache.TrimToLimit();
+            IconDictPersistent.TrimToLimit();
+        }
+
+        internal static void InvalidateCache()
+        {
+            lock (CacheSync)
             {
+                Interlocked.Increment(ref cacheGeneration);
+                IconDictPersistent.Clear();
                 IconDictCache.Clear();
-                GC.Collect();
             }
         }
 
-        internal static void RemoveIconFromCache(string path) => IconDictPersistent.Remove(path, out _);
+        internal static void RemoveIconFromCache(string path)
+        {
+            lock (CacheSync)
+            {
+                Interlocked.Increment(ref cacheGeneration);
+                IconDictPersistent.TryRemove(path, out _);
+                IconDictCache.TryRemove(path, out _);
+            }
+        }
 
         /// <summary>
         /// Loads an Icon requested by parameters.
@@ -100,7 +133,7 @@ namespace SystemTrayMenu.Utilities
         /// <param name="linkOverlay">Apply the link overlay to the icon.</param>
         /// <param name="persistentEntry">Load from or into persistent cache.</param>
         /// <param name="onIconLoaded">Callback called when icon got loaded.</param>
-        /// <param name="synchronousLoading">Force synchronous loading. e.g. during preloading on startup.</param>
+        /// <param name="isCancelled">Whether the requesting menu no longer needs the icon.</param>
         /// <returns>True = Icon was loaded synchronously, False = Icon will be loaded in the background.</returns>
         internal static bool GetIconAsync(
             bool isFolder,
@@ -109,7 +142,7 @@ namespace SystemTrayMenu.Utilities
             bool linkOverlay,
             bool persistentEntry,
             Action<BitmapSource> onIconLoaded,
-            bool synchronousLoading)
+            Func<bool>? isCancelled = null)
         {
             string key = path;
 
@@ -124,31 +157,84 @@ namespace SystemTrayMenu.Utilities
                 }
             }
 
-            if (!DictIconCache(persistentEntry).TryGetValue(key, out BitmapSource? icon) &&
-                !DictIconCache(!persistentEntry).TryGetValue(key, out icon))
+            if (ShutdownToken.IsCancellationRequested || isCancelled?.Invoke() == true)
             {
-                if (synchronousLoading)
-                {
-                    icon = DictIconCache(persistentEntry).GetOrAdd(key, FactoryIconSTA);
-                }
-                else
-                {
-                    IconFactoryQueueSTA.Add(() =>
-                    {
-                        BitmapSource icon = DictIconCache(persistentEntry).GetOrAdd(key, FactoryIconSTA);
-                        onIconLoaded(icon);
-                    });
-
-                    return false;
-                }
+                return false;
             }
 
-            onIconLoaded(icon);
-            return true;
-
-            BitmapSource FactoryIconSTA(string keyExtension)
+            if (DictIconCache(persistentEntry).TryGetValue(key, out BitmapSource? cached) ||
+                DictIconCache(!persistentEntry).TryGetValue(key, out cached))
             {
-                return GetIconAsBitmapSourceSTA(path, resolvedPath, linkOverlay, isFolder);
+                onIconLoaded(cached);
+                return true;
+            }
+
+            long generation = Interlocked.Read(ref cacheGeneration);
+            string pendingKey = generation.ToString() + ":" + key;
+            Lazy<BitmapSource> pending = PendingIcons.GetOrAdd(pendingKey, _ => new(() =>
+            {
+                BitmapSource icon;
+                try
+                {
+                    icon = GetIconAsBitmapSourceSTA(path, resolvedPath, linkOverlay, isFolder);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"Failed to read icon: {path}", ex);
+                    icon = NotFoundImage;
+                }
+
+                lock (CacheSync)
+                {
+                    if (generation == Interlocked.Read(ref cacheGeneration))
+                    {
+                        DictIconCache(persistentEntry).TryAdd(key, icon);
+                    }
+                }
+
+                return icon;
+            }));
+
+            try
+            {
+                // Producers run during directory discovery, never on the UI thread.
+                // Waiting here bounds outstanding work without dropping icons from large menus.
+                while (!IconFactoryQueueSTA.TryAdd(CompleteRequest, 50, ShutdownToken.Token))
+                {
+                    if (isCancelled?.Invoke() == true)
+                    {
+                        RemovePending();
+                        return false;
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                RemovePending();
+            }
+            catch (InvalidOperationException) when (IconFactoryQueueSTA.IsAddingCompleted)
+            {
+                RemovePending();
+            }
+
+            return false;
+
+            void RemovePending() => ((ICollection<KeyValuePair<string, Lazy<BitmapSource>>>)PendingIcons)
+                .Remove(new(pendingKey, pending));
+
+            void CompleteRequest()
+            {
+                try
+                {
+                    if (isCancelled?.Invoke() != true && !ShutdownToken.IsCancellationRequested)
+                    {
+                        onIconLoaded(pending.Value);
+                    }
+                }
+                finally
+                {
+                    RemovePending();
+                }
             }
         }
 
@@ -163,37 +249,7 @@ namespace SystemTrayMenu.Utilities
             return TryGetIcon(path, linkOverlay, shFileInfo, imageList);
         }
 
-        private static bool CacheGetOrAddIcon(
-            string key,
-            bool persistentEntry,
-            Action<BitmapSource?> onIconLoaded,
-            bool synchronousLoading,
-            Func<string, BitmapSource> factory)
-        {
-            if (!DictIconCache(persistentEntry).TryGetValue(key, out BitmapSource? icon) &&
-                !DictIconCache(!persistentEntry).TryGetValue(key, out icon))
-            {
-                if (synchronousLoading)
-                {
-                    icon = DictIconCache(persistentEntry).GetOrAdd(key, factory);
-                }
-                else
-                {
-                    IconFactoryQueueSTA.Add(() =>
-                    {
-                        BitmapSource icon = DictIconCache(persistentEntry).GetOrAdd(key, factory);
-                        onIconLoaded(icon);
-                    });
-
-                    return false;
-                }
-            }
-
-            onIconLoaded(icon);
-            return true;
-        }
-
-        private static BitmapSource? TryCreateBitmapSourceFromIcon(string path, Icon icon) => Application.Current.Dispatcher.Invoke(() =>
+        private static BitmapSource? TryCreateBitmapSourceFromIcon(string path, Icon icon)
         {
             BitmapSource? bitmap = null;
             try
@@ -210,7 +266,7 @@ namespace SystemTrayMenu.Utilities
             }
 
             return bitmap;
-        });
+        }
 
         private static BitmapSource? TryGetIconAsBitmapSourceSTA(string path, string resolvedPath, bool linkOverlay, bool isFolder)
         {
@@ -219,7 +275,7 @@ namespace SystemTrayMenu.Utilities
             if (!isFolder &&
                 Path.GetExtension(path).Equals(".ico", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (TryGetIconExtractAssociatedIcon(path, out Icon icon))
+                if (TryGetIconExtractAssociatedIcon(path, out Icon? icon))
                 {
                     result = TryCreateBitmapSourceFromIcon(path, icon);
                     icon.Dispose();
@@ -228,7 +284,7 @@ namespace SystemTrayMenu.Utilities
             else if (!isFolder && File.Exists(resolvedPath) &&
                 Path.GetExtension(resolvedPath).Equals(".ico", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (TryGetIconExtractAssociatedIcon(resolvedPath, out Icon icon))
+                if (TryGetIconExtractAssociatedIcon(resolvedPath, out Icon? icon))
                 {
                     result = TryCreateBitmapSourceFromIcon(resolvedPath, icon);
                     icon.Dispose();
@@ -260,7 +316,7 @@ namespace SystemTrayMenu.Utilities
             return result;
         }
 
-        private static bool TryGetIconExtractAssociatedIcon(string path, out Icon icon)
+        private static bool TryGetIconExtractAssociatedIcon(string path, [NotNullWhen(true)] out Icon? icon)
         {
             Icon? iconOrNull = null;
             try
@@ -278,7 +334,7 @@ namespace SystemTrayMenu.Utilities
                 return true;
             }
 
-            icon = new Icon(string.Empty);
+            icon = null;
             return false;
         }
 
@@ -290,19 +346,16 @@ namespace SystemTrayMenu.Utilities
             return bitmapSource;
         }
 
-        private static ConcurrentDictionary<string, BitmapSource> DictIconCache(bool checkPersistentFirst)
+        private static BoundedCache<string, BitmapSource> DictIconCache(bool checkPersistentFirst)
             => checkPersistentFirst ? IconDictPersistent : IconDictCache;
 
         private static bool IsExtensionWithSameIcon(string fileExtension)
         {
-            bool isExtensionWithSameIcon = true;
-            List<string> extensionsWithDiffIcons = new() { string.Empty, ".EXE", ".LNK", ".ICO", ".URL" };
-            if (extensionsWithDiffIcons.Contains(fileExtension.ToUpperInvariant()))
-            {
-                isExtensionWithSameIcon = false;
-            }
-
-            return isExtensionWithSameIcon;
+            return fileExtension.Length > 0 &&
+                !fileExtension.Equals(".exe", StringComparison.OrdinalIgnoreCase) &&
+                !fileExtension.Equals(".lnk", StringComparison.OrdinalIgnoreCase) &&
+                !fileExtension.Equals(".ico", StringComparison.OrdinalIgnoreCase) &&
+                !fileExtension.Equals(".url", StringComparison.OrdinalIgnoreCase);
         }
 
         private static uint GetFlags(bool linkOverlay, bool largeIcon)

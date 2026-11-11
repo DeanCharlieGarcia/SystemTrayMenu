@@ -1,13 +1,12 @@
-﻿// <copyright file="Program.cs" company="PlaceholderCompany">
+// <copyright file="Program.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu
+namespace HitNGone
 {
     using System;
-    using System.Reflection;
     using System.Windows;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.Utilities;
 
     internal static class Program
     {
@@ -30,7 +29,7 @@ namespace SystemTrayMenu
                 {
                     MessageBox.Show(
                         Translator.GetText("Your root directory for the app does not exist or is empty! Change the root directory or put some files, directories or shortcuts into the root directory."),
-                        "SystemTrayMenu",
+                        "HitNGone",
                         MessageBoxButton.OK);
                     return;
                 }
@@ -65,29 +64,14 @@ namespace SystemTrayMenu
                 Log.Error("Application Crashed", ex);
 
                 MessageBoxResult dialogResult = MessageBox.Show(
-                    "A problem has been encountered and SystemTrayMenu needs to restart. " +
-                    "Reporting this error will help us making our product better." +
+                    "HitNGone encountered an error. Details were saved to the local log." +
                     Environment.NewLine + Environment.NewLine +
-                    "We kindly ask you to press 'Yes' and send us the crash report before restarting the application. " +
-                    "This will open your standard email app and prepare a mail that you can directly send off. " +
-                    "Alternatively, you can also create an issue manually here: https://github.com/Hofknecht/SystemTrayMenu/issues" +
-                    Environment.NewLine + Environment.NewLine +
-                    "Pressing 'No' will only restart the application." +
-                    Environment.NewLine +
-                    "Pressing 'Cancel' will quit the application.",
-                    "SystemTrayMenu Crashed",
-                    MessageBoxButton.YesNoCancel);
+                    "Restart HitNGone?",
+                    "HitNGone",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Error);
 
-                if (dialogResult == MessageBoxResult.Yes)
-                {
-                    Version? version = Assembly.GetEntryAssembly()?.GetName().Version;
-                    Log.ProcessStart("mailto:" + "markus@hofknecht.eu" +
-                        "?subject=SystemTrayMenu Bug reported " +
-                        (version != null ? version.ToString() : string.Empty) +
-                        "&body=" + ex.ToString());
-                }
-
-                if (!isStartup && dialogResult != MessageBoxResult.Cancel)
+                if (!isStartup && dialogResult == MessageBoxResult.Yes)
                 {
                     AppRestart.ByThreadException();
                 }

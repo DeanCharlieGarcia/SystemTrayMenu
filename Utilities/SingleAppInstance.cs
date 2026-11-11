@@ -1,13 +1,13 @@
-﻿// <copyright file="SingleAppInstance.cs" company="PlaceholderCompany">
+// <copyright file="SingleAppInstance.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System;
     using System.Diagnostics;
     using System.Linq;
-    using SystemTrayMenu.Business;
+    using HitNGone.Business;
 
     internal static class SingleAppInstance
     {

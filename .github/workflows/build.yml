@@ -1,0 +1,23 @@
+name: HitNGone
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025-vs2026
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Build, test and publish
+        shell: pwsh
+        run: .\Build.ps1 -Publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HitNGone-win-x64
+          path: artifacts/HitNGone/
+          if-no-files-found: error

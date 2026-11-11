@@ -1,18 +1,18 @@
-﻿// <copyright file="Config.cs" company="PlaceholderCompany">
+// <copyright file="Config.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu
+namespace HitNGone
 {
     using System;
     using System.IO;
     using System.Windows;
     using System.Windows.Media;
+    using HitNGone.DllImports;
+    using HitNGone.Properties;
+    using HitNGone.UserInterface.FolderBrowseDialog;
+    using HitNGone.Utilities;
     using Microsoft.Win32;
-    using SystemTrayMenu.DllImports;
-    using SystemTrayMenu.Properties;
-    using SystemTrayMenu.UserInterface.FolderBrowseDialog;
-    using SystemTrayMenu.Utilities;
     using Icon = System.Drawing.Icon;
 
     public static class Config
@@ -25,7 +25,9 @@ namespace SystemTrayMenu
         private static bool readHideFileExtdone;
         private static bool isHideFileExtension;
 
-        public static string Path => Settings.Default.PathDirectory;
+        public static string Path => string.IsNullOrWhiteSpace(Settings.Default.PathDirectory)
+            ? string.Empty
+            : System.IO.Path.GetFullPath(Settings.Default.PathDirectory, AppContext.BaseDirectory);
 
         public static string SearchPattern => Settings.Default.SearchPattern;
 
@@ -54,7 +56,7 @@ namespace SystemTrayMenu
                 Settings.Default.PathIcoDirectory = System.IO.Path.Combine(
                     System.IO.Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                        $"SystemTrayMenu"),
+                        $"HitNGone"),
                     "ico");
                 if (!Directory.Exists(Settings.Default.PathIcoDirectory))
                 {
@@ -73,7 +75,7 @@ namespace SystemTrayMenu
             {
                 if (applicationIcon == null)
                 {
-                    Icon icon = App.LoadIconFromResource("Resources/SystemTrayMenu.ico");
+                    Icon icon = App.LoadIconFromResource("Resources/HitNGone.ico");
                     applicationIcon = new(icon, (int)SystemParameters.SmallIconWidth, (int)SystemParameters.SmallIconHeight);
                     icon.Dispose();
                 }
@@ -98,10 +100,10 @@ namespace SystemTrayMenu
             if (string.IsNullOrEmpty(Path))
             {
                 string textFirstStart = Translator.GetText(
-                    "Read the FAQ and then choose a root directory for SystemTrayMenu.");
+                    "Read the FAQ and then choose a root directory for HitNGone.");
                 MessageBox.Show(
                     textFirstStart,
-                    "SystemTrayMenu",
+                    "HitNGone",
                     MessageBoxButton.OK);
                 ShowHelpFAQ();
                 SetFolderByUser();
@@ -139,7 +141,7 @@ namespace SystemTrayMenu
             Log.ProcessStart("https://github.com/Hofknecht/SystemTrayMenu#FAQ");
         }
 
-        internal static void ShowSupportSystemTrayMenu()
+        internal static void ShowSupportHitNGone()
         {
             Log.ProcessStart("https://github.com/Hofknecht/SystemTrayMenu#donations");
         }

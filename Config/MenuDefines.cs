@@ -1,8 +1,8 @@
-﻿// <copyright file="MenuDefines.cs" company="PlaceholderCompany">
+// <copyright file="MenuDefines.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu
+namespace HitNGone
 {
     using System.Windows.Media;
 

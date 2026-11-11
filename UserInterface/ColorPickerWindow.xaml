@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (c) 2023-2023 Peter Kirmeier -->
 <!-- TODO: Localization of Title -->
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -6,9 +6,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
-        xmlns:u="clr-namespace:SystemTrayMenu.Utilities"
-        xmlns:stm="clr-namespace:SystemTrayMenu"
-        x:Class="SystemTrayMenu.UserInterface.ColorPickerWindow"
+        xmlns:u="clr-namespace:HitNGone.Utilities"
+        xmlns:stm="clr-namespace:HitNGone"
+        x:Class="HitNGone.UserInterface.ColorPickerWindow"
         Style="{StaticResource {x:Type Window}}" mc:Ignorable="d" d:Background="{x:Static stm:MenuDefines.ColorBackground}"
         Title="{u:Translate 'Choose color'}" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight" ResizeMode="CanResizeWithGrip">
     <Grid>

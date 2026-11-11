@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="About SystemTrayMenu" xml:space="preserve">
-    <value>Giới thiệu về SystemTrayMenu</value>
+  <data name="About HitNGone" xml:space="preserve">
+    <value>Giới thiệu về HitNGone</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>ĐƯỢC RỒI</value>
@@ -174,8 +174,8 @@
   <data name="Frequently Asked Questions" xml:space="preserve">
     <value>Các câu hỏi thường gặp</value>
   </data>
-  <data name="Read the FAQ and then choose a root directory for SystemTrayMenu." xml:space="preserve">
-    <value>Đọc Câu hỏi thường gặp và sau đó chọn thư mục gốc cho SystemTrayMenu.</value>
+  <data name="Read the FAQ and then choose a root directory for HitNGone." xml:space="preserve">
+    <value>Đọc Câu hỏi thường gặp và sau đó chọn thư mục gốc cho HitNGone.</value>
   </data>
   <data name="Select directory" xml:space="preserve">
     <value>Chọn thư mục</value>
@@ -456,7 +456,7 @@
   <data name="Icon size" xml:space="preserve">
     <value>Kích cỡ biểu tượng</value>
   </data>
-  <data name="Support SystemTrayMenu" xml:space="preserve">
+  <data name="Support HitNGone" xml:space="preserve">
     <value>Hệ thống hỗ trợKhayMenu</value>
   </data>
   <data name="Fading" xml:space="preserve">
@@ -534,8 +534,8 @@
   <data name="New version available!" xml:space="preserve">
     <value>Phiên bản mới có sẵn!</value>
   </data>
-  <data name="You have the latest version of SystemTrayMenu!" xml:space="preserve">
-    <value>Bạn có phiên bản mới nhất của SystemTrayMenu!</value>
+  <data name="You have the latest version of HitNGone!" xml:space="preserve">
+    <value>Bạn có phiên bản mới nhất của HitNGone!</value>
   </data>
   <data name="Application size" xml:space="preserve">
     <value>kích thước ứng dụng</value>

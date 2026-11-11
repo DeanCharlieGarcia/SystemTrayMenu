@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (c) 2022-2023 Peter Kirmeier -->
 <Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -6,10 +6,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        xmlns:stm="clr-namespace:SystemTrayMenu"
-        xmlns:u="clr-namespace:SystemTrayMenu.Utilities"
-        xmlns:local="clr-namespace:SystemTrayMenu.UserInterface"
-        x:Class="SystemTrayMenu.UserInterface.Menu"
+        xmlns:stm="clr-namespace:HitNGone"
+        xmlns:u="clr-namespace:HitNGone.Utilities"
+        xmlns:local="clr-namespace:HitNGone.UserInterface"
+        x:Class="HitNGone.UserInterface.Menu"
         Style="{StaticResource {x:Type Window}}" mc:Ignorable="d" Background="Transparent" d:MaxHeight="200"
         ResizeMode="NoResize" WindowStyle="None" Topmost="True" AllowsTransparency="True" SizeToContent="WidthAndHeight" ShowInTaskbar="False" SnapsToDevicePixels="True"
         PreviewKeyDown="HandlePreviewKeyDown">
@@ -175,7 +175,8 @@
             </DockPanel>
 
             <ListView x:Name="dgv" x:FieldModifier="internal" Margin="6,2,6,1" Padding="0" d:ItemsSource="{d:SampleData ItemCount=50}" SelectionMode="Single" HorizontalContentAlignment="Stretch"
-                      Background="{x:Null}" BorderThickness="0" VirtualizingStackPanel.IsVirtualizing="False"
+                      Background="{x:Null}" BorderThickness="0" VirtualizingStackPanel.IsVirtualizing="True"
+                      VirtualizingStackPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel"
                       SelectionChanged="ListView_SelectionChanged"
                       ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="HandleScrollChanged">
                 <!--ListView."Childs".Border.Padding="0" // In ctor, see: dgv_border -->

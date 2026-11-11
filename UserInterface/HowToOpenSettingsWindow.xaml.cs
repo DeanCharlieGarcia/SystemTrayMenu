@@ -1,13 +1,13 @@
-﻿// <copyright file="HowToOpenSettingsWindow.xaml.cs" company="PlaceholderCompany">
+// <copyright file="HowToOpenSettingsWindow.xaml.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2023-2023 Peter Kirmeier
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System.Windows;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.Utilities;
 
     /// <summary>
     /// Logic of HowToOpenSettings window.

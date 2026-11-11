@@ -1,16 +1,16 @@
-﻿// <copyright file="FolderDialog.cs" company="PlaceholderCompany">
+// <copyright file="FolderDialog.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.UserInterface.FolderBrowseDialog
+namespace HitNGone.UserInterface.FolderBrowseDialog
 {
     using System;
     using System.Runtime.InteropServices;
     using System.Runtime.Versioning;
     using System.Windows;
     using System.Windows.Interop;
-    using SystemTrayMenu.DllImports;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.DllImports;
+    using HitNGone.Utilities;
 
     public class FolderDialog : IFolderDialog, IDisposable
     {

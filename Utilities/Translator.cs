@@ -1,16 +1,19 @@
-﻿// <copyright file="Translator.cs" company="PlaceholderCompany">
+// <copyright file="Translator.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System.Globalization;
     using System.Resources;
-    using SystemTrayMenu.Properties;
-    using SystemTrayMenu.UserInterface;
+    using HitNGone.Properties;
+    using HitNGone.UserInterface;
 
     internal static class Translator
     {
+        private static readonly ResourceManager Resources = new(
+            "HitNGone.Resources.Languages.lang", typeof(Menu).Assembly);
+
         private static CultureInfo? culture;
 
         internal static void Initialize()
@@ -26,12 +29,6 @@ namespace SystemTrayMenu.Utilities
                 Settings.Default.CurrentCultureInfoName);
         }
 
-        internal static string GetText(string id)
-        {
-            ResourceManager rm = new(
-                "SystemTrayMenu.Resources.Languages.lang",
-                typeof(Menu).Assembly);
-            return rm.GetString(id, culture) ?? id;
-        }
+        internal static string GetText(string id) => Resources.GetString(id, culture) ?? id;
     }
 }

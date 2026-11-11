@@ -1,8 +1,8 @@
-﻿// <copyright file="Menus.cs" company="PlaceholderCompany">
+// <copyright file="Menus.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Business
+namespace HitNGone.Business
 {
     using System;
     using System.Collections.Generic;
@@ -10,19 +10,20 @@ namespace SystemTrayMenu.Business
     using System.Data;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
     using System.Windows.Threading;
+    using HitNGone.DataClasses;
+    using HitNGone.DllImports;
+    using HitNGone.Helpers;
+    using HitNGone.Properties;
+    using HitNGone.UserInterface;
+    using HitNGone.Utilities;
     using Microsoft.Win32;
-    using SystemTrayMenu.DataClasses;
-    using SystemTrayMenu.DllImports;
-    using SystemTrayMenu.Helpers;
-    using SystemTrayMenu.Properties;
-    using SystemTrayMenu.UserInterface;
-    using SystemTrayMenu.Utilities;
-    using Menu = SystemTrayMenu.UserInterface.Menu;
-    using StartLocation = SystemTrayMenu.UserInterface.Menu.StartLocation;
+    using Menu = HitNGone.UserInterface.Menu;
+    using StartLocation = HitNGone.UserInterface.Menu.StartLocation;
 
     internal class Menus : IDisposable
     {
@@ -31,12 +32,17 @@ namespace SystemTrayMenu.Business
         private readonly List<BackgroundWorker> workersSubMenu = new();
         private readonly WaitToLoadMenu waitToOpenMenu = new();
         private readonly KeyboardInput keyboardInput = new();
-        private readonly List<FileSystemWatcher> watchers = new();
-        private readonly List<EventArgs> watcherHistory = new();
+        private readonly List<RecoveringDirectoryWatcher> watchers = new();
+        private readonly DispatcherTimer watcherRefreshTimer = new();
+        private readonly DirectoryChangeState watcherChanges = new();
         private readonly DispatcherTimer timerShowProcessStartedAsLoadingIcon = new();
         private readonly DispatcherTimer timerStillActiveCheck = new();
         private readonly DispatcherTimer waitLeave = new();
         private readonly Menu mainMenu;
+
+        private BackgroundWorker? watcherRefreshWorker;
+        private bool watcherRefreshing;
+        private volatile bool isDisposed;
 
         private TaskbarPosition taskbarPosition = TaskbarPosition.Unknown;
         private bool mainMenuPreloading = true;
@@ -51,8 +57,7 @@ namespace SystemTrayMenu.Business
 
             if (!keyboardInput.RegisterHotKey(Settings.Default.HotKey))
             {
-                Settings.Default.HotKey = string.Empty;
-                Settings.Default.Save();
+                Log.Info("The configured hotkey remains saved; it may be in use by another application.");
             }
 
             keyboardInput.HotKeyPressed += SwitchOpenCloseByHotKey;
@@ -93,6 +98,10 @@ namespace SystemTrayMenu.Business
                 FadeHalfOrOutIfNeeded();
             };
 
+            mainMenu = new(null, Config.Path);
+            watcherRefreshTimer.Interval = TimeSpan.FromMilliseconds(150);
+            watcherRefreshTimer.Tick += WatcherRefreshTimer_Tick;
+
             CreateWatcher(Config.Path, false);
             foreach (var pathAndFlags in DirectoryHelpers.GetAddionalPathsForMainMenu())
             {
@@ -101,38 +110,58 @@ namespace SystemTrayMenu.Business
 
             void CreateWatcher(string path, bool recursiv)
             {
-                try
-                {
-                    FileSystemWatcher watcher = new()
+                RecoveringDirectoryWatcher registration = new(
+                    failed =>
                     {
-                        Path = path,
-                        NotifyFilter = NotifyFilters.Attributes |
-                        NotifyFilters.DirectoryName |
-                        NotifyFilters.FileName |
-                        NotifyFilters.LastWrite,
-                        Filter = "*.*",
-                    };
-                    watcher.Created += WatcherProcessItem;
-                    watcher.Deleted += WatcherProcessItem;
-                    watcher.Renamed += WatcherProcessItem;
-                    watcher.Changed += WatcherProcessItem;
-                    watcher.IncludeSubdirectories = recursiv;
-                    watcher.EnableRaisingEvents = true;
-                    watchers.Add(watcher);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warn($"Failed to {nameof(CreateWatcher)}: {path}", ex);
-                }
+                        FileSystemWatcher watcher = new();
+                        try
+                        {
+                            watcher.Path = path;
+                            watcher.NotifyFilter = NotifyFilters.Attributes | NotifyFilters.DirectoryName |
+                                NotifyFilters.FileName | NotifyFilters.LastWrite;
+                            watcher.Filter = "*.*";
+                            watcher.IncludeSubdirectories = recursiv;
+                            watcher.Created += WatcherProcessItem;
+                            watcher.Deleted += WatcherProcessItem;
+                            watcher.Renamed += WatcherProcessItem;
+                            watcher.Changed += WatcherProcessItem;
+                            watcher.Error += (_, e) =>
+                            {
+                                Log.Warn($"Directory watcher failed: {path}", e.GetException());
+                                failed();
+                            };
+                            watcher.EnableRaisingEvents = true;
+                            return watcher;
+                        }
+                        catch
+                        {
+                            watcher.Dispose();
+                            throw;
+                        }
+                    },
+                    () =>
+                    {
+                        if (!isDisposed)
+                        {
+                            IconReader.InvalidateCache();
+                            RequestWatcherRefresh();
+                        }
+                    },
+                    ex => Log.Warn($"Directory watcher connection failed: {path}", ex));
+                watchers.Add(registration);
+                registration.Start();
             }
 
             SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
-
-            mainMenu = new(null, Config.Path);
         }
 
         public void Dispose()
         {
+            isDisposed = true;
+            watcherRefreshTimer.Stop();
+            watcherRefreshTimer.Tick -= WatcherRefreshTimer_Tick;
+            watcherRefreshWorker?.CancelAsync();
+            watcherRefreshWorker?.Dispose();
             SingleAppInstance.Wakeup -= SwitchOpenCloseByHotKey;
             SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
             workerMainMenu.Dispose();
@@ -141,12 +170,8 @@ namespace SystemTrayMenu.Business
                 worker.Dispose();
             }
 
-            foreach (FileSystemWatcher watcher in watchers)
+            foreach (RecoveringDirectoryWatcher watcher in watchers)
             {
-                watcher.Created -= WatcherProcessItem;
-                watcher.Deleted -= WatcherProcessItem;
-                watcher.Renamed -= WatcherProcessItem;
-                watcher.Changed -= WatcherProcessItem;
                 watcher.Dispose();
             }
 
@@ -263,11 +288,13 @@ namespace SystemTrayMenu.Business
 
         private static void LoadMenu(object? sender, DoWorkEventArgs eDoWork)
         {
+            using IDisposable? measurement = PerformanceTrace.Measure("Directory discovery");
             BackgroundWorker? workerSelf = sender as BackgroundWorker;
-            RowData? rowData = eDoWork.Argument as RowData;
+            var request = eDoWork.Argument is ValueTuple<RowData, Guid> loadRequest ? loadRequest : default;
+            RowData? rowData = request.Item1;
             string path = rowData?.ResolvedPath ?? Config.Path;
 
-            MenuData menuData = new(rowData);
+            MenuData menuData = new(rowData, request.Item2);
             DirectoryHelpers.DiscoverItems(workerSelf, path, ref menuData);
             if (menuData.DirectoryState != MenuDataDirectoryState.Undefined &&
                 workerSelf != null && rowData == null)
@@ -281,8 +308,20 @@ namespace SystemTrayMenu.Business
 
         private void LoadMainMenuCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
+            using IDisposable? measurement = PerformanceTrace.Measure("Main menu presentation");
             keyboardInput.ResetSelectedByKey();
             menuNotifyIcon.LoadingStop();
+
+            if (e.Error != null)
+            {
+                Log.Warn("Failed to load main menu.", e.Error);
+                return;
+            }
+
+            if (e.Cancelled)
+            {
+                return;
+            }
 
             if (e.Result == null)
             {
@@ -337,7 +376,14 @@ namespace SystemTrayMenu.Business
 
         private void LoadSubMenuCompleted(object? senderCompleted, RunWorkerCompletedEventArgs e)
         {
-            if (e.Result == null || mainMenu.Visibility != Visibility.Visible)
+            using IDisposable? measurement = PerformanceTrace.Measure("Submenu presentation");
+            if (e.Error != null)
+            {
+                Log.Warn("Failed to load submenu.", e.Error);
+                return;
+            }
+
+            if (e.Cancelled || e.Result == null || mainMenu.Visibility != Visibility.Visible)
             {
                 return;
             }
@@ -354,7 +400,7 @@ namespace SystemTrayMenu.Business
                 menu = menu.SubMenu;
             }
 
-            if (menu == null)
+            if (menu == null || !menuData.MatchesRequest(menu.RowDataParent))
             {
                 return;
             }
@@ -451,12 +497,7 @@ namespace SystemTrayMenu.Business
             menu.CellMouseDown += keyboardInput.SelectByMouse;
             menu.CellOpenOnClick += waitToOpenMenu.OpenSubMenuByMouse;
 
-            if (menu.Level == 0)
-            {
-                // Main Menu
-                menu.Loaded += (s, e) => ExecuteWatcherHistory();
-            }
-            else
+            if (menu.Level != 0)
             {
                 // Sub Menu (loading)
                 menu.ShowWithFade(!App.IsActiveApp, false);
@@ -501,7 +542,8 @@ namespace SystemTrayMenu.Business
                         workersSubMenu.Add(workerSubMenu);
                     }
 
-                    workerSubMenu.RunWorkerAsync(rowData);
+                    rowData.LoadRequestId = Guid.NewGuid();
+                    workerSubMenu.RunWorkerAsync((rowData, rowData.LoadRequestId));
                 }
             }
         }
@@ -659,172 +701,135 @@ namespace SystemTrayMenu.Business
             AdjustMenusSizeAndLocation(menu.Level);
         }
 
-        private void ExecuteWatcherHistory()
-        {
-            foreach (var fileSystemEventArgs in watcherHistory)
-            {
-                WatcherProcessItem(watchers, fileSystemEventArgs);
-            }
-
-            watcherHistory.Clear();
-        }
-
         private void WatcherProcessItem(object sender, EventArgs e)
         {
-            // Store event in history as long as menu is not loaded
-            if (mainMenu.Dispatcher.Invoke(() => !mainMenu.IsLoaded))
+            if (isDisposed)
             {
-                watcherHistory.Add(e);
                 return;
             }
 
-            if (e is RenamedEventArgs renamedEventArgs)
+            if (e is FileSystemEventArgs change)
             {
-                mainMenu.Dispatcher.Invoke(() => RenameItem(mainMenu, renamedEventArgs));
-            }
-            else if (e is FileSystemEventArgs fileSystemEventArgs)
-            {
-                if (fileSystemEventArgs.ChangeType == WatcherChangeTypes.Deleted)
+                IconReader.RemoveIconFromCache(change.FullPath);
+                if (e is RenamedEventArgs rename)
                 {
-                    mainMenu.Dispatcher.Invoke(() => DeleteItem(mainMenu, fileSystemEventArgs));
-                }
-                else if (fileSystemEventArgs.ChangeType == WatcherChangeTypes.Created)
-                {
-                    mainMenu.Dispatcher.Invoke(() => CreateItem(mainMenu, fileSystemEventArgs));
+                    IconReader.RemoveIconFromCache(rename.OldFullPath);
                 }
             }
+
+            RequestWatcherRefresh();
         }
 
-        private void RenameItem(Menu menu, RenamedEventArgs e)
+        private void RequestWatcherRefresh()
         {
-            try
+            if (isDisposed || !watcherChanges.RequestNotification())
             {
-                List<RowData> rowDatas = new();
-                foreach (RowData rowData in menu.GetDataGridView().Items.SourceCollection)
-                {
-                    // TODO: Check if this check is correct as it looks like wronge entries might be modified as well?
-                    if (rowData.Path.StartsWith($"{e.OldFullPath}"))
-                    {
-                        string path = rowData.Path.Replace(e.OldFullPath, e.FullPath);
-                        if (rowData.IsFolder)
-                        {
-                            string? dirpath = Path.GetDirectoryName(path);
-                            if (string.IsNullOrEmpty(dirpath))
-                            {
-                                continue;
-                            }
-
-                            path = dirpath;
-                        }
-
-                        RowData rowDataRenamed = new(rowData.IsFolder, rowData.IsAdditionalItem, 0, path);
-                        FolderOptions.ReadHiddenAttributes(rowDataRenamed.Path, out bool hasHiddenFlag, out bool isDirectoryToHide);
-                        if (isDirectoryToHide)
-                        {
-                            continue;
-                        }
-
-                        IconReader.RemoveIconFromCache(rowData.Path);
-                        rowDataRenamed.HiddenEntry = hasHiddenFlag;
-                        rowDataRenamed.LoadIcon(true);
-                        rowDatas.Add(rowDataRenamed);
-                    }
-                    else
-                    {
-                        rowDatas.Add(rowData);
-                    }
-                }
-
-                if (menu.SelectedItem != null)
-                {
-                    menu.SelectedItem = null;
-                    menu.SubMenu?.Close();
-                    menu.RefreshSelection();
-                }
-
-                // Apply list changes
-                rowDatas = DirectoryHelpers.SortItems(rowDatas);
-                menu.AddItemsToMenu(rowDatas, null);
-
-                AdjustLocationOnWatcherUpdate(menu);
-                menu.OnWatcherUpdate();
+                return;
             }
-            catch (Exception ex)
+
+            _ = mainMenu.Dispatcher.InvokeAsync(() =>
             {
-                Log.Warn($"Failed to {nameof(RenameItem)}: {e.OldFullPath} {e.FullPath}", ex);
-            }
+                watcherChanges.AcceptNotification();
+                if (!isDisposed)
+                {
+                    // Restart once for a burst; no file IO runs in this callback.
+                    watcherRefreshTimer.Stop();
+                    watcherRefreshTimer.Start();
+                }
+            });
         }
 
-        private void DeleteItem(Menu menu, FileSystemEventArgs e)
+        private async void WatcherRefreshTimer_Tick(object? sender, EventArgs e)
         {
+            watcherRefreshTimer.Stop();
+            if (isDisposed)
+            {
+                return;
+            }
+
+            if (mainMenuPreloading || watcherRefreshing)
+            {
+                watcherRefreshTimer.Start();
+                return;
+            }
+
+            using IDisposable? measurement = PerformanceTrace.Measure("Watcher refresh");
+            watcherRefreshing = true;
+            long version = watcherChanges.Version;
+            using BackgroundWorker worker = new() { WorkerSupportsCancellation = true };
+            watcherRefreshWorker = worker;
             try
             {
-                ListView? dgv = menu.GetDataGridView();
-                List<RowData> rowsToRemove = new();
-
-                foreach (RowData rowData in dgv.ItemsSource)
+                MenuData snapshot = await Task.Run(() =>
                 {
-                    if (rowData.Path == e.FullPath ||
-                        rowData.Path.StartsWith($"{e.FullPath}\\"))
-                    {
-                        IconReader.RemoveIconFromCache(rowData.Path);
-                        rowsToRemove.Add(rowData);
-                    }
-                }
+                    MenuData data = new(null);
+                    DirectoryHelpers.DiscoverItems(worker, Config.Path, ref data);
+                    return data;
+                });
 
-                if (menu.SelectedItem != null && rowsToRemove.Contains(menu.SelectedItem))
-                {
-                    menu.SelectedItem = null;
-                    menu.SubMenu?.Close();
-                    menu.RefreshSelection();
-                }
-
-                // Apply list changes
-                ((List<RowData>)dgv.ItemsSource).RemoveAll(rowsToRemove.Contains);
-
-                AdjustLocationOnWatcherUpdate(menu);
-                menu.OnWatcherUpdate();
-            }
-            catch (Exception ex)
-            {
-                Log.Warn($"Failed to {nameof(DeleteItem)}: {e.FullPath}", ex);
-            }
-        }
-
-        private void CreateItem(Menu menu, FileSystemEventArgs e)
-        {
-            try
-            {
-                FileAttributes attr = File.GetAttributes(e.FullPath);
-                bool isFolder = (attr & FileAttributes.Directory) == FileAttributes.Directory;
-                bool isAddionalItem = Path.GetDirectoryName(e.FullPath) != Config.Path;
-                RowData rowData = new(isFolder, isAddionalItem, 0, e.FullPath);
-                FolderOptions.ReadHiddenAttributes(rowData.Path, out bool hasHiddenFlag, out bool isDirectoryToHide);
-                if (isDirectoryToHide)
+                if (isDisposed || worker.CancellationPending)
                 {
                     return;
                 }
 
-                rowData.HiddenEntry = hasHiddenFlag;
-                rowData.LoadIcon(true);
-
-                var items = (List<RowData>)menu.GetDataGridView().Items.SourceCollection;
-                List<RowData> rowDatas = new(items.Count + 1) { rowData };
-                foreach (RowData item in items)
+                if (version != watcherChanges.Version)
                 {
-                    rowDatas.Add(item);
+                    watcherRefreshTimer.Start();
+                    return;
                 }
 
-                // Apply list changes
-                rowDatas = DirectoryHelpers.SortItems(rowDatas);
-                menu.AddItemsToMenu(rowDatas, null);
+                if (snapshot.DirectoryState is not (MenuDataDirectoryState.Valid or MenuDataDirectoryState.Empty))
+                {
+                    Log.Info("Directory refresh did not produce an accessible snapshot.");
+                    return;
+                }
 
-                AdjustLocationOnWatcherUpdate(menu);
-                menu.OnWatcherUpdate();
+                RowData? selected = mainMenu.SelectedItem;
+                var existing = ((IEnumerable<RowData>)mainMenu.GetDataGridView().Items.SourceCollection)
+                    .ToDictionary(row => row.Path, StringComparer.OrdinalIgnoreCase);
+                for (int i = 0; i < snapshot.RowDatas.Count; i++)
+                {
+                    RowData fresh = snapshot.RowDatas[i];
+                    if (existing.TryGetValue(fresh.Path, out RowData? previous) &&
+                        previous.IsFolder == fresh.IsFolder && previous.ResolvedPath == fresh.ResolvedPath &&
+                        previous.HiddenEntry == fresh.HiddenEntry)
+                    {
+                        previous.AdoptIcon(fresh);
+                        snapshot.RowDatas[i] = previous;
+                    }
+                }
+
+                if (selected != null && !snapshot.RowDatas.Contains(selected))
+                {
+                    mainMenu.SelectedItem = null;
+                    mainMenu.SubMenu?.Close();
+                    mainMenu.RefreshSelection();
+                }
+
+                mainMenu.AddItemsToMenu(snapshot.RowDatas, null);
+                mainMenu.OnWatcherUpdate();
+                if (selected != null && snapshot.RowDatas.Contains(selected))
+                {
+                    mainMenu.SelectedItem = selected;
+                }
+
+                AdjustLocationOnWatcherUpdate(mainMenu);
             }
             catch (Exception ex)
             {
-                Log.Warn($"Failed to {nameof(CreateItem)}: {e.FullPath}", ex);
+                if (!isDisposed)
+                {
+                    Log.Warn("Failed to refresh directory snapshot.", ex);
+                }
+            }
+            finally
+            {
+                watcherRefreshWorker = null;
+                watcherRefreshing = false;
+                if (!isDisposed && version != watcherChanges.Version)
+                {
+                    watcherRefreshTimer.Start();
+                }
             }
         }
     }

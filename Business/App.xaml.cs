@@ -1,19 +1,17 @@
-﻿// <copyright file="App.xaml.cs" company="PlaceholderCompany">
+// <copyright file="App.xaml.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu
+namespace HitNGone
 {
     using System;
     using System.Drawing;
     using System.IO;
     using System.Windows;
-    using System.Windows.Threading;
-    using SystemTrayMenu.Business;
-    using SystemTrayMenu.Helpers;
-    using SystemTrayMenu.Helpers.Updater;
-    using SystemTrayMenu.Properties;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.Business;
+    using HitNGone.Helpers;
+    using HitNGone.Properties;
+    using HitNGone.Utilities;
 
     /// <summary>
     /// App contains the notifyicon, the taskbarform and the menus.
@@ -45,13 +43,6 @@ namespace SystemTrayMenu
                 {
                     joystickHelper = new();
                     joystickHelper.KeyPressed += menus.KeyPressed;
-                }
-
-                if (Settings.Default.CheckForUpdates)
-                {
-                    _ = Dispatcher.InvokeAsync(
-                        () => GitHubUpdate.ActivateNewVersionFormOrCheckForUpdates(showWhenUpToDate: false),
-                        DispatcherPriority.ApplicationIdle);
                 }
             };
         }

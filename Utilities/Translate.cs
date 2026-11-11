@@ -1,10 +1,10 @@
-﻿// <copyright file="Translate.cs" company="PlaceholderCompany">
+// <copyright file="Translate.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2022-2022 Peter Kirmeier
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System;
     using System.Windows.Markup;

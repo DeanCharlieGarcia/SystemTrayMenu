@@ -1,9 +1,10 @@
-﻿// <copyright file="MenuData.cs" company="PlaceholderCompany">
+// <copyright file="MenuData.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.DataClasses
+namespace HitNGone.DataClasses
 {
+    using System;
     using System.Collections.Generic;
 
     internal enum MenuDataDirectoryState
@@ -31,9 +32,10 @@ namespace SystemTrayMenu.DataClasses
 
     internal struct MenuData
     {
-        public MenuData(RowData? rowDataParent)
+        public MenuData(RowData? rowDataParent, Guid requestId = default)
         {
             RowDataParent = rowDataParent;
+            RequestId = requestId;
             if (rowDataParent != null)
             {
                 Level = rowDataParent.Level + 1;
@@ -44,6 +46,8 @@ namespace SystemTrayMenu.DataClasses
             }
         }
 
+        internal Guid RequestId { get; }
+
         internal int Level { get; }
 
         internal RowData? RowDataParent { get; }
@@ -51,5 +55,8 @@ namespace SystemTrayMenu.DataClasses
         internal List<RowData> RowDatas { get; set; } = new ();
 
         internal MenuDataDirectoryState DirectoryState { get; set; } = MenuDataDirectoryState.Undefined;
+
+        internal bool MatchesRequest(RowData? parent) =>
+            parent != null && ReferenceEquals(RowDataParent, parent) && RequestId == parent.LoadRequestId;
     }
 }

@@ -1,8 +1,8 @@
-﻿// <copyright file="SettingsWindow.xaml.cs" company="PlaceholderCompany">
+// <copyright file="SettingsWindow.xaml.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Collections.Generic;
@@ -12,11 +12,11 @@ namespace SystemTrayMenu.UserInterface
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
+    using HitNGone.Helpers;
+    using HitNGone.Properties;
+    using HitNGone.UserInterface.FolderBrowseDialog;
+    using HitNGone.Utilities;
     using Microsoft.Win32;
-    using SystemTrayMenu.Helpers;
-    using SystemTrayMenu.Properties;
-    using SystemTrayMenu.UserInterface.FolderBrowseDialog;
-    using SystemTrayMenu.Utilities;
     using Windows.ApplicationModel;
 
     /// <summary>
@@ -24,8 +24,8 @@ namespace SystemTrayMenu.UserInterface
     /// </summary>
     public partial class SettingsWindow : Window
     {
-        private const string MenuName = @"Software\Classes\directory\shell\SystemTrayMenu_SetAsRootFolder";
-        private const string Command = @"Software\Classes\directory\shell\SystemTrayMenu_SetAsRootFolder\command";
+        private const string MenuName = @"Software\Classes\directory\shell\HitNGone_SetAsRootFolder";
+        private const string Command = @"Software\Classes\directory\shell\HitNGone_SetAsRootFolder\command";
 
         private static SettingsWindow? singletonWindow;
 
@@ -67,8 +67,6 @@ namespace SystemTrayMenu.UserInterface
                 labelStartupStatus.Visibility = Visibility.Collapsed;
                 checkBoxAutostart.IsChecked = Settings.Default.IsAutostartActivated;
             }
-
-            checkBoxCheckForUpdates.IsChecked = Settings.Default.CheckForUpdates;
 
             textBoxHotkey.SetHotkeyRegistration(GlobalHotkeys.GetLastCreatedHotkeyFunction());
 
@@ -474,13 +472,11 @@ namespace SystemTrayMenu.UserInterface
                 {
                     RegistryKey? key = Registry.CurrentUser.OpenSubKey(
                         @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-                    key?.DeleteValue("SystemTrayMenu", false);
+                    key?.DeleteValue("HitNGone", false);
 
                     Settings.Default.IsAutostartActivated = false;
                 }
             }
-
-            Settings.Default.CheckForUpdates = checkBoxCheckForUpdates.IsChecked ?? false;
 
             if (textBoxHotkey.WasHotkeyChanged)
             {
@@ -727,7 +723,6 @@ namespace SystemTrayMenu.UserInterface
             checkBoxSaveConfigInApplicationDirectory.IsChecked = false;
             checkBoxSaveLogFileInApplicationDirectory.IsChecked = false;
             checkBoxAutostart.IsChecked = false;
-            checkBoxCheckForUpdates.IsChecked = false;
         }
 
         private void ButtonChangeIcoFolder_Click(object sender, RoutedEventArgs e)
@@ -843,7 +838,7 @@ namespace SystemTrayMenu.UserInterface
             textBoxIcoFolder.Text = Path.Combine(
                 Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    $"SystemTrayMenu"),
+                    $"HitNGone"),
                 "ico");
 
             if (!Directory.Exists(Settings.Default.PathIcoDirectory))

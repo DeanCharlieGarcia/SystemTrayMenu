@@ -1,8 +1,8 @@
-﻿// <copyright file="PrivilegeChecker.cs" company="PlaceholderCompany">
+// <copyright file="PrivilegeChecker.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System.Linq;
     using System.Security.Principal;

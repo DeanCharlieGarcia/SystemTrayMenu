@@ -1,8 +1,8 @@
-﻿// <copyright file="ColorSelector.xaml.cs" company="PlaceholderCompany">
+// <copyright file="ColorSelector.xaml.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Windows.Controls;

@@ -1,8 +1,8 @@
-﻿// <copyright file="Log.cs" company="PlaceholderCompany">
+// <copyright file="Log.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System;
     using System.Collections.Generic;
@@ -107,7 +107,7 @@ namespace SystemTrayMenu.Utilities
             string logFilePath = string.Empty;
             if (!Properties.Settings.Default.SaveLogFileInApplicationDirectory)
             {
-                logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), $"SystemTrayMenu");
+                logFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), $"HitNGone");
             }
 
             return Path.Combine(logFilePath, $"log-{Environment.MachineName}{backup}.txt");

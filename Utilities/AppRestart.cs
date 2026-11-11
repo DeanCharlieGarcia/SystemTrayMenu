@@ -1,8 +1,8 @@
-﻿// <copyright file="AppRestart.cs" company="PlaceholderCompany">
+// <copyright file="AppRestart.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System;
     using System.ComponentModel;

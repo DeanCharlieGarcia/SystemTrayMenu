@@ -1,13 +1,13 @@
-﻿// <copyright file="WindowsTaskbar.cs" company="PlaceholderCompany">
+// <copyright file="WindowsTaskbar.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Helpers
+namespace HitNGone.Helpers
 {
     using System;
     using System.Drawing;
     using System.Runtime.InteropServices;
-    using static SystemTrayMenu.DllImports.NativeMethods;
+    using static HitNGone.DllImports.NativeMethods;
 
     public enum TaskbarPosition
     {

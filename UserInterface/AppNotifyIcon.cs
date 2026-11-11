@@ -1,8 +1,8 @@
-﻿// <copyright file="AppNotifyIcon.cs" company="PlaceholderCompany">
+// <copyright file="AppNotifyIcon.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Drawing;
@@ -17,7 +17,7 @@ namespace SystemTrayMenu.UserInterface
 
         public AppNotifyIcon()
         {
-            notifyIcon.ToolTip = "SystemTrayMenu";
+            notifyIcon.ToolTip = "HitNGone";
             notifyIcon.Icon = Config.GetAppIcon().Handle;
             notifyIcon.ContextMenu = new AppContextMenu().Create();
             notifyIcon.MessageWindow.MouseEventReceived += (sender, e) =>

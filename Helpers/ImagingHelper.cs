@@ -1,8 +1,8 @@
-﻿// <copyright file="ImagingHelper.cs" company="PlaceholderCompany">
+// <copyright file="ImagingHelper.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Helpers
+namespace HitNGone.Helpers
 {
     using System.Drawing;
     using System.Drawing.Imaging;

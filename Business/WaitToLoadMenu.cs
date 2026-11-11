@@ -1,12 +1,12 @@
-﻿// <copyright file="WaitToLoadMenu.cs" company="PlaceholderCompany">
+// <copyright file="WaitToLoadMenu.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Business
+namespace HitNGone.Business
 {
     using System;
     using System.Windows.Threading;
-    using SystemTrayMenu.DataClasses;
+    using HitNGone.DataClasses;
 
     internal class WaitToLoadMenu : IDisposable
     {

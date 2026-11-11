@@ -1,18 +1,17 @@
-﻿// <copyright file="DirectoryHelpers.cs" company="PlaceholderCompany">
+// <copyright file="DirectoryHelpers.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Helpers
+namespace HitNGone.Helpers
 {
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Data;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using SystemTrayMenu.DataClasses;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.DataClasses;
+    using HitNGone.Utilities;
 
     internal static class DirectoryHelpers
     {
@@ -24,7 +23,7 @@ namespace SystemTrayMenu.Helpers
                 isNetworkRoot = FileLnk.IsNetworkRoot(path);
                 if (isNetworkRoot)
                 {
-                    DiscoverNetworkRootDirectories(path, ref menuData);
+                    DiscoverNetworkRootDirectories(worker, path, ref menuData);
                 }
                 else
                 {
@@ -50,11 +49,22 @@ namespace SystemTrayMenu.Helpers
             {
                 foreach (var additionalPath in GetAddionalPathsForMainMenu())
                 {
-                    GetDirectoriesAndFilesRecursive(ref menuData, additionalPath.Path, additionalPath.OnlyFiles, additionalPath.Recursive);
+                    if (worker?.CancellationPending == true)
+                    {
+                        return;
+                    }
+
+                    DiscoverDirectory(worker, additionalPath.Path, true, additionalPath.OnlyFiles, additionalPath.Recursive, ref menuData);
                 }
             }
 
+            HashSet<string> paths = new(StringComparer.OrdinalIgnoreCase);
+            menuData.RowDatas.RemoveAll(row => !paths.Add(row.Path));
             RemoveHiddenOrReadIcons(worker, isNetworkRoot, ref menuData);
+            if (worker?.CancellationPending == true)
+            {
+                return;
+            }
 
             if (menuData.RowDatas.Count == 0)
             {
@@ -118,7 +128,7 @@ namespace SystemTrayMenu.Helpers
 
         private static void RemoveHiddenOrReadIcons(BackgroundWorker? worker, bool isNetworkRoot, ref MenuData menuData)
         {
-            List<RowData> rowDatasToRemove = new();
+            HashSet<RowData> rowDatasToRemove = new();
             foreach (RowData rowData in menuData.RowDatas)
             {
                 if (worker?.CancellationPending == true)
@@ -138,50 +148,17 @@ namespace SystemTrayMenu.Helpers
                     rowData.HiddenEntry = hasHiddenFlag;
                 }
 
-                rowData.LoadIcon(menuData.Level == 0);
+                rowData.LoadIcon(menuData.Level == 0, () => worker?.CancellationPending == true);
             }
 
-            menuData.RowDatas = menuData.RowDatas.Except(rowDatasToRemove).ToList();
+            menuData.RowDatas.RemoveAll(rowDatasToRemove.Contains);
         }
 
-        private static void DiscoverNetworkRootDirectories(string path, ref MenuData menuData)
+        private static void DiscoverNetworkRootDirectories(BackgroundWorker? worker, string path, ref MenuData menuData)
         {
-            Process cmd = new();
-            cmd.StartInfo.FileName = "cmd.exe";
-            cmd.StartInfo.RedirectStandardInput = true;
-            cmd.StartInfo.RedirectStandardOutput = true;
-            cmd.StartInfo.CreateNoWindow = true;
-            cmd.StartInfo.UseShellExecute = false;
-            cmd.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-
-            cmd.Start();
-            cmd.StandardInput.WriteLine($"net view {path}");
-            cmd.StandardInput.Flush();
-            cmd.StandardInput.Close();
-            string output = cmd.StandardOutput.ReadToEnd();
-            cmd.WaitForExit();
-            cmd.Close();
-
-            bool resolvedSomething = false;
-            List<string> lines = output
-                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-            if (lines.Count > 8)
+            foreach (string directory in NetworkShares.Discover(path, () => worker?.CancellationPending == true))
             {
-                foreach (string line in lines.Skip(6).SkipLast(2))
-                {
-                    int indexOfFirstSpace = line.IndexOf("  ", StringComparison.InvariantCulture);
-                    if (indexOfFirstSpace > 0)
-                    {
-                        string directory = Path.Combine(path, line[..indexOfFirstSpace]);
-                        menuData.RowDatas.Add(new RowData(true, false, menuData.Level, directory));
-                        resolvedSomething = true;
-                    }
-                }
-            }
-
-            if (!resolvedSomething)
-            {
-                Log.Info($"Could not resolve network root folder: {path} , output:{output}");
+                menuData.RowDatas.Add(new RowData(true, false, menuData.Level, directory));
             }
         }
 
@@ -194,69 +171,33 @@ namespace SystemTrayMenu.Helpers
                 return;
             }
 
-            foreach (var directory in Directory.GetDirectories(path))
-            {
-                if (worker?.CancellationPending == true)
-                {
-                    return;
-                }
-
-                menuData.RowDatas.Add(new RowData(true, false, menuData.Level, directory));
-            }
-
-            foreach (string file in GetFilesBySearchPattern(path, Config.SearchPattern))
-            {
-                if (worker?.CancellationPending == true)
-                {
-                    return;
-                }
-
-                menuData.RowDatas.Add(new RowData(false, false, menuData.Level, file));
-            }
+            DiscoverDirectory(worker, path, false, false, false, ref menuData);
         }
 
-        private static void GetDirectoriesAndFilesRecursive(
-            ref MenuData menuData,
+        private static void DiscoverDirectory(
+            BackgroundWorker? worker,
             string path,
+            bool isAdditional,
             bool onlyFiles,
-            bool recursiv)
+            bool recursive,
+            ref MenuData menuData)
         {
-            try
-            {
-                foreach (string file in GetFilesBySearchPattern(path, Config.SearchPattern))
+            List<RowData> rows = menuData.RowDatas;
+            int level = menuData.Level;
+            FileNameFilter filter = new(Config.SearchPattern);
+            DirectoryScanner.Visit(
+                path,
+                recursive,
+                () => worker?.CancellationPending == true,
+                entry =>
                 {
-                    menuData.RowDatas.Add(new RowData(false, true, menuData.Level, file));
-                }
-
-                foreach (string directory in Directory.GetDirectories(path))
-                {
-                    if (!onlyFiles)
+                    bool isFolder = entry is DirectoryInfo;
+                    if ((isFolder && !onlyFiles) || (!isFolder && filter.Matches(entry.Name)))
                     {
-                        menuData.RowDatas.Add(new RowData(true, true, menuData.Level, directory));
+                        rows.Add(new RowData(isFolder, isAdditional, level, entry.FullName));
                     }
-
-                    if (recursiv)
-                    {
-                        GetDirectoriesAndFilesRecursive(ref menuData, directory, onlyFiles, recursiv);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warn($"GetDirectoriesAndFilesRecursive path:'{path}'", ex);
-            }
-        }
-
-        private static List<string> GetFilesBySearchPattern(string path, string searchPatternCombined)
-        {
-            string[] searchPatterns = searchPatternCombined.Split('|');
-            List<string> files = new();
-            foreach (string searchPattern in searchPatterns)
-            {
-                files.AddRange(Directory.GetFiles(path, searchPattern));
-            }
-
-            return files;
+                },
+                isAdditional ? (failedPath, ex) => Log.Warn($"Failed to scan directory: {failedPath}", ex) : null);
         }
     }
 }

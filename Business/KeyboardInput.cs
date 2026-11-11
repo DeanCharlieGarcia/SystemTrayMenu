@@ -1,15 +1,15 @@
-﻿// <copyright file="KeyboardInput.cs" company="PlaceholderCompany">
+// <copyright file="KeyboardInput.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Business
+namespace HitNGone.Business
 {
     using System;
     using System.Windows.Input;
-    using SystemTrayMenu.DataClasses;
-    using SystemTrayMenu.UserInterface;
-    using SystemTrayMenu.Utilities;
-    using static SystemTrayMenu.Helpers.GlobalHotkeys;
+    using HitNGone.DataClasses;
+    using HitNGone.UserInterface;
+    using HitNGone.Utilities;
+    using static HitNGone.Helpers.GlobalHotkeys;
 
     internal class KeyboardInput : IDisposable
     {

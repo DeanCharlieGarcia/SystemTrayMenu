@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="About SystemTrayMenu" xml:space="preserve">
-    <value>SystemTrayMenu பற்றி</value>
+  <data name="About HitNGone" xml:space="preserve">
+    <value>HitNGone பற்றி</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>சரி</value>
@@ -174,8 +174,8 @@
   <data name="Frequently Asked Questions" xml:space="preserve">
     <value>அடிக்கடி கேட்கப்படும் கேள்விகள்</value>
   </data>
-  <data name="Read the FAQ and then choose a root directory for SystemTrayMenu." xml:space="preserve">
-    <value>அடிக்கடி கேட்கப்படும் கேள்விகளைப் படித்து, பின்னர் SystemTrayMenuக்கான ரூட் கோப்பகத்தைத் தேர்ந்தெடுக்கவும்.</value>
+  <data name="Read the FAQ and then choose a root directory for HitNGone." xml:space="preserve">
+    <value>அடிக்கடி கேட்கப்படும் கேள்விகளைப் படித்து, பின்னர் HitNGoneக்கான ரூட் கோப்பகத்தைத் தேர்ந்தெடுக்கவும்.</value>
   </data>
   <data name="Select directory" xml:space="preserve">
     <value>கோப்பகத்தைத் தேர்ந்தெடுக்கவும்</value>
@@ -456,8 +456,8 @@
   <data name="Icon size" xml:space="preserve">
     <value>ஐகான் அளவு</value>
   </data>
-  <data name="Support SystemTrayMenu" xml:space="preserve">
-    <value>SystemTrayMenu ஐ ஆதரிக்கவும்</value>
+  <data name="Support HitNGone" xml:space="preserve">
+    <value>HitNGone ஐ ஆதரிக்கவும்</value>
   </data>
   <data name="Fading" xml:space="preserve">
     <value>மறைதல்</value>
@@ -534,8 +534,8 @@
   <data name="New version available!" xml:space="preserve">
     <value>புதிய பதிப்பு கிடைக்கிறது!</value>
   </data>
-  <data name="You have the latest version of SystemTrayMenu!" xml:space="preserve">
-    <value>SystemTrayMenu இன் சமீபத்திய பதிப்பு உங்களிடம் உள்ளது!</value>
+  <data name="You have the latest version of HitNGone!" xml:space="preserve">
+    <value>HitNGone இன் சமீபத்திய பதிப்பு உங்களிடம் உள்ளது!</value>
   </data>
   <data name="Application size" xml:space="preserve">
     <value>விண்ணப்ப அளவு</value>

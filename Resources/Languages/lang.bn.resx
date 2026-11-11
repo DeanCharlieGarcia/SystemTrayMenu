@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="About SystemTrayMenu" xml:space="preserve">
-    <value>SystemTrayMenu সম্পর্কে</value>
+  <data name="About HitNGone" xml:space="preserve">
+    <value>HitNGone সম্পর্কে</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>ঠিক আছে</value>
@@ -174,8 +174,8 @@
   <data name="Frequently Asked Questions" xml:space="preserve">
     <value>সচরাচর জিজ্ঞাস্য</value>
   </data>
-  <data name="Read the FAQ and then choose a root directory for SystemTrayMenu." xml:space="preserve">
-    <value>FAQ পড়ুন এবং তারপর SystemTrayMenu-এর জন্য একটি রুট ডিরেক্টরি নির্বাচন করুন।</value>
+  <data name="Read the FAQ and then choose a root directory for HitNGone." xml:space="preserve">
+    <value>FAQ পড়ুন এবং তারপর HitNGone-এর জন্য একটি রুট ডিরেক্টরি নির্বাচন করুন।</value>
   </data>
   <data name="Select directory" xml:space="preserve">
     <value>ডিরেক্টরি নির্বাচন করুন</value>
@@ -456,7 +456,7 @@
   <data name="Icon size" xml:space="preserve">
     <value>আইকন আকার</value>
   </data>
-  <data name="Support SystemTrayMenu" xml:space="preserve">
+  <data name="Support HitNGone" xml:space="preserve">
     <value>সিস্টেমট্রেমেনু সমর্থন করে</value>
   </data>
   <data name="Fading" xml:space="preserve">
@@ -534,8 +534,8 @@
   <data name="New version available!" xml:space="preserve">
     <value>নতুন সংস্করণ উপলব্ধ!</value>
   </data>
-  <data name="You have the latest version of SystemTrayMenu!" xml:space="preserve">
-    <value>আপনার কাছে SystemTrayMenu এর সর্বশেষ সংস্করণ আছে!</value>
+  <data name="You have the latest version of HitNGone!" xml:space="preserve">
+    <value>আপনার কাছে HitNGone এর সর্বশেষ সংস্করণ আছে!</value>
   </data>
   <data name="Application size" xml:space="preserve">
     <value>আবেদনের আকার</value>

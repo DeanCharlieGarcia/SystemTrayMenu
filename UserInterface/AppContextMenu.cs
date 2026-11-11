@@ -1,8 +1,8 @@
-﻿// <copyright file="AppContextMenu.cs" company="PlaceholderCompany">
+// <copyright file="AppContextMenu.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Diagnostics;
@@ -10,8 +10,7 @@ namespace SystemTrayMenu.UserInterface
     using System.Windows;
     using System.Windows.Threading;
     using H.NotifyIcon.Core;
-    using SystemTrayMenu.Helpers.Updater;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.Utilities;
 
     internal class AppContextMenu
     {
@@ -24,9 +23,8 @@ namespace SystemTrayMenu.UserInterface
             AddItem(menu, "Log File", Log.OpenLogFile);
             AddSeperator(menu);
             AddItem(menu, "Frequently Asked Questions", Config.ShowHelpFAQ);
-            AddItem(menu, "Support SystemTrayMenu", Config.ShowSupportSystemTrayMenu);
-            AddItem(menu, "About SystemTrayMenu", About);
-            AddItem(menu, "Check for updates", () => GitHubUpdate.ActivateNewVersionFormOrCheckForUpdates(showWhenUpToDate: true));
+            AddItem(menu, "Support SystemTrayMenu (original project)", Config.ShowSupportHitNGone);
+            AddItem(menu, "About HitNGone", About);
             AddSeperator(menu);
             AddItem(menu, "Restart", AppRestart.ByAppContextMenu);
             AddItem(menu, "Exit app", () => Application.Current.Shutdown());

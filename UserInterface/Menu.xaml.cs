@@ -1,12 +1,13 @@
-﻿// <copyright file="Menu.xaml.cs" company="PlaceholderCompany">
+// <copyright file="Menu.xaml.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
+    using System.Globalization;
     using System.IO;
     using System.Windows;
     using System.Windows.Controls;
@@ -14,12 +15,12 @@ namespace SystemTrayMenu.UserInterface
     using System.Windows.Input;
     using System.Windows.Media;
     using System.Windows.Media.Animation;
-    using SystemTrayMenu.Business;
-    using SystemTrayMenu.DataClasses;
-    using SystemTrayMenu.DllImports;
-    using SystemTrayMenu.Helpers;
-    using SystemTrayMenu.Properties;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.Business;
+    using HitNGone.DataClasses;
+    using HitNGone.DllImports;
+    using HitNGone.Helpers;
+    using HitNGone.Properties;
+    using HitNGone.Utilities;
 
     /// <summary>
     /// Logic of Menu window.
@@ -39,6 +40,7 @@ namespace SystemTrayMenu.UserInterface
 
         private readonly string folderPath;
 
+        private double cachedTextWidth = double.NaN;
         private int countLeftMouseButtonClicked;
         private bool isShellContextMenuOpen;
         private bool directionToRight;
@@ -169,7 +171,7 @@ namespace SystemTrayMenu.UserInterface
                     {
                         if (Clipboard.ContainsText(TextDataFormat.Text))
                         {
-                            textBoxSearch.SelectedText = Clipboard.GetData(DataFormats.Text).ToString();
+                            textBoxSearch.SelectedText = Clipboard.GetText(TextDataFormat.Text);
                         }
                     }),
             });
@@ -308,18 +310,11 @@ namespace SystemTrayMenu.UserInterface
 
         internal void RiseItemExecuted(RowData rowData)
         {
-            ListViewItem? lvi;
-            int i = 0;
-            while ((lvi = dgv.FindVisualChildOfType<ListViewItem>(i++)) != null)
+            if (dgv.ItemContainerGenerator.ContainerFromItem(rowData) is ListViewItem item)
             {
-                if (lvi.Content == rowData)
-                {
-                    Border? border_outer = lvi.FindVisualChildOfType<Border>();
-                    Border? border_inner = border_outer?.FindVisualChildOfType<Border>();
-                    border_inner?.BeginStoryboard((Storyboard)dgv.FindResource("OpenAnimationStoryboard"));
-
-                    return;
-                }
+                Border? outer = item.FindVisualChildOfType<Border>();
+                Border? inner = outer?.FindVisualChildOfType<Border>();
+                inner?.BeginStoryboard((Storyboard)dgv.FindResource("OpenAnimationStoryboard"));
             }
         }
 
@@ -408,6 +403,7 @@ namespace SystemTrayMenu.UserInterface
 
         internal void AddItemsToMenu(List<RowData> data, MenuDataDirectoryState? state)
         {
+            cachedTextWidth = double.NaN;
             for (int index = 0; index < data.Count; index++)
             {
                 RowData rowData = data[index];
@@ -796,49 +792,15 @@ namespace SystemTrayMenu.UserInterface
 
         internal Rect GetDataGridViewChildRect(RowData rowData)
         {
-            // When scrolled, we have to reduce the index number as we calculate based on visual tree
-            int rowIndex = rowData.RowIndex;
-            int startIndex = 0;
-            double offsetY = 0D;
-            if (VisualTreeHelper.GetChild(dgv, 0) is Decorator { Child: ScrollViewer scrollViewer })
+            if (dgv.ItemContainerGenerator.ContainerFromItem(rowData) is ListViewItem item)
             {
-                startIndex = (int)scrollViewer.VerticalOffset;
-                if (rowIndex < startIndex)
-                {
-                    // calculate position above starting point
-                    for (int i = rowIndex; i < startIndex; i++)
-                    {
-                        ListViewItem? item = dgv.FindVisualChildOfType<ListViewItem>(i);
-                        if (item != null)
-                        {
-                            offsetY -= item.ActualHeight;
-                        }
-                    }
-                }
+                return item.TransformToAncestor(dgv).TransformBounds(new Rect(item.RenderSize));
             }
 
-            if (startIndex < rowIndex)
-            {
-                // calculate position below starting point
-                // outer loop check for max RowIndex, independend of currently active filter
-                // inner loop check for filtered and shown items
-                for (int i = startIndex; i < rowIndex; i++)
-                {
-                    ListViewItem? item = dgv.FindVisualChildOfType<ListViewItem>(i);
-                    if (item != null)
-                    {
-                        if (((RowData)item.Content).RowIndex >= rowIndex)
-                        {
-                            break;
-                        }
-
-                        offsetY += item.ActualHeight;
-                    }
-                }
-            }
-
-            // All childs are using same width and height, so we simply fill in values from parent instead of individual child
-            return new(0D, offsetY, dgv.ActualWidth, (double)Resources["RowHeight"]);
+            int visibleIndex = dgv.Items.IndexOf(rowData);
+            double height = (double)Resources["RowHeight"];
+            double offset = dgv.FindVisualChildOfType<ScrollViewer>()?.VerticalOffset ?? 0D;
+            return new(0D, (visibleIndex * height) - offset, dgv.ActualWidth, height);
         }
 
         private static bool Filter_Default(RowData itemData)
@@ -846,21 +808,6 @@ namespace SystemTrayMenu.UserInterface
             if (Settings.Default.ShowOnlyAsSearchResult && itemData.IsAdditionalItem)
             {
                 return false;
-            }
-
-            return true;
-        }
-
-        private static bool Filter_ByUserPattern(RowData itemData, string userPattern)
-        {
-            // Instead implementing in-string wildcards, simply split into multiple search pattersy
-            // Look for each space separated string if it is part of an entry's text (case insensitive)
-            foreach (string pattern in userPattern.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
-            {
-                if (!itemData.ColumnText.ToLower().Contains(pattern))
-                {
-                    return false;
-                }
             }
 
             return true;
@@ -1009,6 +956,29 @@ namespace SystemTrayMenu.UserInterface
             Resources["ColumnTextMaxWidth"] = Math.Ceiling(
                 ((double)Scaling.Factor * Scaling.FactorByDpi * 400D * (Settings.Default.WidthMaxInPercent / 100D))
                 + windowFrame.Margin.Left + windowFrame.Margin.Right);
+
+            // Measure text once per dataset, so recycling cannot change menu width while scrolling.
+            if (double.IsNaN(cachedTextWidth))
+            {
+                cachedTextWidth = 0D;
+                Typeface typeface = new(dgv.FontFamily, dgv.FontStyle, dgv.FontWeight, dgv.FontStretch);
+                double pixelsPerDip = VisualTreeHelper.GetDpi(dgv).PixelsPerDip;
+                foreach (RowData row in dgv.Items.SourceCollection)
+                {
+                    FormattedText text = new(
+                        row.ColumnText,
+                        CultureInfo.CurrentUICulture,
+                        dgv.FlowDirection,
+                        typeface,
+                        dgv.FontSize,
+                        dgv.Foreground ?? Brushes.Black,
+                        pixelsPerDip);
+                    cachedTextWidth = Math.Max(cachedTextWidth, text.WidthIncludingTrailingWhitespace);
+                }
+            }
+
+            dgv.MinWidth = Math.Ceiling(Math.Min(cachedTextWidth, (double)Resources["ColumnTextMaxWidth"]) +
+                (double)Resources["ColumnIconWidth"] + SystemParameters.VerticalScrollBarWidth + 14D);
         }
 
         private void HandleScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -1021,9 +991,11 @@ namespace SystemTrayMenu.UserInterface
 
         private void TextBoxSearch_TextChanged(bool causedByWatcherUpdate)
         {
+            using IDisposable? measurement = PerformanceTrace.Measure("Search and layout");
             SearchTextChanging?.Invoke();
 
-            string? userPattern = textBoxSearch.Text?.Replace("%", " ").Replace("*", " ").ToLower();
+            string userPattern = textBoxSearch.Text?.Replace("%", " ").Replace("*", " ") ?? string.Empty;
+            string[] terms = MenuSearch.Prepare(userPattern);
 
             CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(dgv.ItemsSource);
             if (string.IsNullOrEmpty(userPattern))
@@ -1034,7 +1006,7 @@ namespace SystemTrayMenu.UserInterface
             else
             {
                 SizeToContent = SizeToContent.Manual;
-                view.Filter = (object item) => Filter_ByUserPattern((RowData)item, userPattern);
+                view.Filter = (object item) => MenuSearch.Matches(((RowData)item).ColumnText, terms);
             }
 
             SearchTextChanged?.Invoke(this, string.IsNullOrEmpty(userPattern), causedByWatcherUpdate);

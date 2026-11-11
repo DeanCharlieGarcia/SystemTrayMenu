@@ -1,10 +1,10 @@
-﻿// <copyright file="ColorPickerWindow.xaml.cs" company="PlaceholderCompany">
+// <copyright file="ColorPickerWindow.xaml.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2023-2023 Peter Kirmeier
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Windows;

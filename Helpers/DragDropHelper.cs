@@ -1,8 +1,8 @@
-﻿// <copyright file="DragDropHelper.cs" company="PlaceholderCompany">
+// <copyright file="DragDropHelper.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Helpers
+namespace HitNGone.Helpers
 {
     using System;
     using System.IO;
@@ -10,8 +10,8 @@ namespace SystemTrayMenu.Helpers
     using System.Text;
     using System.Threading;
     using System.Windows;
-    using SystemTrayMenu.UserInterface;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.UserInterface;
+    using HitNGone.Utilities;
 
     public static class DragDropHelper
     {

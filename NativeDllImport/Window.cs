@@ -1,10 +1,10 @@
-﻿// <copyright file="Window.cs" company="PlaceholderCompany">
+// <copyright file="Window.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2022-2023 Peter Kirmeier
 
-namespace SystemTrayMenu.DllImports
+namespace HitNGone.DllImports
 {
     using System;
     using System.Runtime.InteropServices;

@@ -1,11 +1,11 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (c) 2022-2023 Peter Kirmeier -->
 <UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:stm="clr-namespace:SystemTrayMenu"
-             x:Class="SystemTrayMenu.UserInterface.NumericUpDown"
+             xmlns:stm="clr-namespace:HitNGone"
+             x:Class="HitNGone.UserInterface.NumericUpDown"
              mc:Ignorable="d" d:Height="21" Margin="1,1,5,1" Width="76">
     <UserControl.Resources>
         <Style TargetType="{x:Type Button}">

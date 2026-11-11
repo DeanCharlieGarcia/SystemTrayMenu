@@ -1,11 +1,11 @@
-﻿// <copyright file="WindowsExplorerSort.cs" company="PlaceholderCompany">
+// <copyright file="WindowsExplorerSort.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Helpers
+namespace HitNGone.Helpers
 {
     using System.Collections.Generic;
-    using SystemTrayMenu.DllImports;
+    using HitNGone.DllImports;
 
     internal class WindowsExplorerSort : IComparer<string?>
     {

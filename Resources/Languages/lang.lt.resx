@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="About SystemTrayMenu" xml:space="preserve">
-    <value>Apie SystemTrayMenu</value>
+  <data name="About HitNGone" xml:space="preserve">
+    <value>Apie HitNGone</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>Gerai</value>
@@ -174,8 +174,8 @@
   <data name="Frequently Asked Questions" xml:space="preserve">
     <value>Dažnai užduodami klausimai</value>
   </data>
-  <data name="Read the FAQ and then choose a root directory for SystemTrayMenu." xml:space="preserve">
-    <value>Perskaitykite DUK ir pasirinkite SystemTrayMenu šakninį katalogą.</value>
+  <data name="Read the FAQ and then choose a root directory for HitNGone." xml:space="preserve">
+    <value>Perskaitykite DUK ir pasirinkite HitNGone šakninį katalogą.</value>
   </data>
   <data name="Select directory" xml:space="preserve">
     <value>Pasirinkite katalogą</value>
@@ -456,8 +456,8 @@
   <data name="Icon size" xml:space="preserve">
     <value>Piktogramos dydis</value>
   </data>
-  <data name="Support SystemTrayMenu" xml:space="preserve">
-    <value>Palaikykite SystemTrayMenu</value>
+  <data name="Support HitNGone" xml:space="preserve">
+    <value>Palaikykite HitNGone</value>
   </data>
   <data name="Fading" xml:space="preserve">
     <value>Išblukimas</value>
@@ -534,8 +534,8 @@
   <data name="New version available!" xml:space="preserve">
     <value>Galima nauja versija!</value>
   </data>
-  <data name="You have the latest version of SystemTrayMenu!" xml:space="preserve">
-    <value>Turite naujausią SystemTrayMenu versiją!</value>
+  <data name="You have the latest version of HitNGone!" xml:space="preserve">
+    <value>Turite naujausią HitNGone versiją!</value>
   </data>
   <data name="Application size" xml:space="preserve">
     <value>Paraiškos dydis</value>

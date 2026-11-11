@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="About SystemTrayMenu" xml:space="preserve">
-    <value>SystemTrayMenu గురించి</value>
+  <data name="About HitNGone" xml:space="preserve">
+    <value>HitNGone గురించి</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>అలాగే</value>
@@ -174,8 +174,8 @@
   <data name="Frequently Asked Questions" xml:space="preserve">
     <value>తరచుగా అడుగు ప్రశ్నలు</value>
   </data>
-  <data name="Read the FAQ and then choose a root directory for SystemTrayMenu." xml:space="preserve">
-    <value>తరచుగా అడిగే ప్రశ్నలను చదివి, ఆపై SystemTrayMenu కోసం రూట్ డైరెక్టరీని ఎంచుకోండి.</value>
+  <data name="Read the FAQ and then choose a root directory for HitNGone." xml:space="preserve">
+    <value>తరచుగా అడిగే ప్రశ్నలను చదివి, ఆపై HitNGone కోసం రూట్ డైరెక్టరీని ఎంచుకోండి.</value>
   </data>
   <data name="Select directory" xml:space="preserve">
     <value>డైరెక్టరీని ఎంచుకోండి</value>
@@ -456,8 +456,8 @@
   <data name="Icon size" xml:space="preserve">
     <value>చిహ్నం పరిమాణం</value>
   </data>
-  <data name="Support SystemTrayMenu" xml:space="preserve">
-    <value>మద్దతు SystemTrayMenu</value>
+  <data name="Support HitNGone" xml:space="preserve">
+    <value>మద్దతు HitNGone</value>
   </data>
   <data name="Fading" xml:space="preserve">
     <value>మసకబారుతోంది</value>
@@ -534,8 +534,8 @@
   <data name="New version available!" xml:space="preserve">
     <value>కొత్త వెర్షన్ అందుబాటులో ఉంది!</value>
   </data>
-  <data name="You have the latest version of SystemTrayMenu!" xml:space="preserve">
-    <value>మీరు SystemTrayMenu యొక్క తాజా సంస్కరణను కలిగి ఉన్నారు!</value>
+  <data name="You have the latest version of HitNGone!" xml:space="preserve">
+    <value>మీరు HitNGone యొక్క తాజా సంస్కరణను కలిగి ఉన్నారు!</value>
   </data>
   <data name="Application size" xml:space="preserve">
     <value>అప్లికేషన్ పరిమాణం</value>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="About SystemTrayMenu" xml:space="preserve">
-    <value>Tentang SystemTrayMenu</value>
+  <data name="About HitNGone" xml:space="preserve">
+    <value>Tentang HitNGone</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>OKE</value>
@@ -174,8 +174,8 @@
   <data name="Frequently Asked Questions" xml:space="preserve">
     <value>Pertanyaan yang Sering Diajukan</value>
   </data>
-  <data name="Read the FAQ and then choose a root directory for SystemTrayMenu." xml:space="preserve">
-    <value>Baca FAQ dan kemudian pilih direktori root untuk SystemTrayMenu.</value>
+  <data name="Read the FAQ and then choose a root directory for HitNGone." xml:space="preserve">
+    <value>Baca FAQ dan kemudian pilih direktori root untuk HitNGone.</value>
   </data>
   <data name="Select directory" xml:space="preserve">
     <value>Pilih direktori</value>
@@ -456,8 +456,8 @@
   <data name="Icon size" xml:space="preserve">
     <value>Ukuran ikon</value>
   </data>
-  <data name="Support SystemTrayMenu" xml:space="preserve">
-    <value>Mendukung SystemTrayMenu</value>
+  <data name="Support HitNGone" xml:space="preserve">
+    <value>Mendukung HitNGone</value>
   </data>
   <data name="Fading" xml:space="preserve">
     <value>Kabur</value>
@@ -534,8 +534,8 @@
   <data name="New version available!" xml:space="preserve">
     <value>Versi baru tersedia!</value>
   </data>
-  <data name="You have the latest version of SystemTrayMenu!" xml:space="preserve">
-    <value>Anda memiliki SystemTrayMenu versi terbaru!</value>
+  <data name="You have the latest version of HitNGone!" xml:space="preserve">
+    <value>Anda memiliki HitNGone versi terbaru!</value>
   </data>
   <data name="Application size" xml:space="preserve">
     <value>Ukuran aplikasi</value>

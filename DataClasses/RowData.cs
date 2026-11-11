@@ -1,21 +1,22 @@
-﻿// <copyright file="RowData.cs" company="PlaceholderCompany">
+// <copyright file="RowData.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.DataClasses
+namespace HitNGone.DataClasses
 {
     using System;
     using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Runtime.CompilerServices;
+    using System.Threading;
     using System.Windows;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
-    using SystemTrayMenu.Helpers;
-    using SystemTrayMenu.Properties;
-    using SystemTrayMenu.UserInterface;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.Helpers;
+    using HitNGone.Properties;
+    using HitNGone.UserInterface;
+    using HitNGone.Utilities;
 
     internal class RowData : INotifyPropertyChanged
     {
@@ -26,6 +27,7 @@ namespace SystemTrayMenu.DataClasses
         private bool isClicked;
         private bool isSelected;
         private Menu? subMenu;
+        private long iconRequest;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RowData"/> class.
@@ -196,6 +198,8 @@ namespace SystemTrayMenu.DataClasses
 
         internal int Level { get; }
 
+        internal Guid LoadRequestId { get; set; }
+
         internal string FileExtension { get; }
 
         internal bool ShowOverlay { get; }
@@ -229,13 +233,47 @@ namespace SystemTrayMenu.DataClasses
         /// <param name="propertyName">Name of the changing property.</param>
         public void CallPropertyChanged([CallerMemberName] string? propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        internal void LoadIcon(bool isMainMenu)
+        internal void LoadIcon(bool isMainMenu, Func<bool>? isCancelled = null)
         {
-            if (!IconReader.GetIconAsync(IsPointingToFolder, Path, ResolvedPath, ShowOverlay, isMainMenu, UpdateFinalIcon, isMainMenu))
+            long request = Interlocked.Increment(ref iconRequest);
+            IconLoading = true;
+            ColumnIcon = IconReader.LoadingImage;
+            _ = IconReader.GetIconAsync(
+                IsPointingToFolder,
+                Path,
+                ResolvedPath,
+                ShowOverlay,
+                isMainMenu,
+                icon => UpdateFinalIcon(icon, request),
+                isCancelled);
+        }
+
+        internal void AdoptIcon(RowData source)
+        {
+            long request = Interlocked.Increment(ref iconRequest);
+            if (!source.IconLoading)
             {
-                IconLoading = true;
-                ColumnIcon = IconReader.LoadingImage; // TODO: Maybe add rotation animation like for the loading Menu icon? (See: pictureBoxLoading, LoadingRotation)
+                if (source.ColumnIcon is BitmapSource icon)
+                {
+                    UpdateFinalIcon(icon, request, false);
+                }
+
+                return;
             }
+
+            PropertyChangedEventHandler? loaded = null;
+            loaded = (_, _) =>
+            {
+                if (!source.IconLoading)
+                {
+                    source.PropertyChanged -= loaded;
+                    if (source.ColumnIcon is BitmapSource icon)
+                    {
+                        UpdateFinalIcon(icon, request, false);
+                    }
+                }
+            };
+            source.PropertyChanged += loaded;
         }
 
         internal void OpenItem(int clickCount)
@@ -374,9 +412,20 @@ namespace SystemTrayMenu.DataClasses
             }
         }
 
-        private void UpdateFinalIcon(BitmapSource icon)
+        private void UpdateFinalIcon(BitmapSource icon, long request, bool applyHidden = true)
         {
-            if (HiddenEntry)
+            if (request != Interlocked.Read(ref iconRequest) || Application.Current.Dispatcher.HasShutdownStarted)
+            {
+                return;
+            }
+
+            if (!Application.Current.Dispatcher.CheckAccess())
+            {
+                _ = Application.Current.Dispatcher.InvokeAsync(() => UpdateFinalIcon(icon, request, applyHidden));
+                return;
+            }
+
+            if (HiddenEntry && applyHidden)
             {
                 icon = ImagingHelper.ApplyOpactiy(icon, 0.5d);
                 icon.Freeze(); // Make it accessible for any thread

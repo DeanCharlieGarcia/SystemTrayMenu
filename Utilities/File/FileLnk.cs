@@ -1,8 +1,8 @@
-﻿// <copyright file="FileLnk.cs" company="PlaceholderCompany">
+// <copyright file="FileLnk.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.Utilities
+namespace HitNGone.Utilities
 {
     using System;
     using System.IO;

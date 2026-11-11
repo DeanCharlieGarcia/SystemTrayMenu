@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="About SystemTrayMenu" xml:space="preserve">
-    <value>Acerca de SystemTrayMenu</value>
+  <data name="About HitNGone" xml:space="preserve">
+    <value>Acerca de HitNGone</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>DE ACUERDO</value>
@@ -174,8 +174,8 @@
   <data name="Frequently Asked Questions" xml:space="preserve">
     <value>Preguntas frecuentes</value>
   </data>
-  <data name="Read the FAQ and then choose a root directory for SystemTrayMenu." xml:space="preserve">
-    <value>Lea las preguntas frecuentes y luego elija un directorio raíz para SystemTrayMenu.</value>
+  <data name="Read the FAQ and then choose a root directory for HitNGone." xml:space="preserve">
+    <value>Lea las preguntas frecuentes y luego elija un directorio raíz para HitNGone.</value>
   </data>
   <data name="Select directory" xml:space="preserve">
     <value>Seleccionar directorio</value>
@@ -456,8 +456,8 @@
   <data name="Icon size" xml:space="preserve">
     <value>Tamaño de ícono</value>
   </data>
-  <data name="Support SystemTrayMenu" xml:space="preserve">
-    <value>Soporte SystemTrayMenu</value>
+  <data name="Support HitNGone" xml:space="preserve">
+    <value>Soporte HitNGone</value>
   </data>
   <data name="Fading" xml:space="preserve">
     <value>Desvanecimiento</value>
@@ -534,8 +534,8 @@
   <data name="New version available!" xml:space="preserve">
     <value>¡Nueva versión disponible!</value>
   </data>
-  <data name="You have the latest version of SystemTrayMenu!" xml:space="preserve">
-    <value>¡Tienes la última versión de SystemTrayMenu!</value>
+  <data name="You have the latest version of HitNGone!" xml:space="preserve">
+    <value>¡Tienes la última versión de HitNGone!</value>
   </data>
   <data name="Application size" xml:space="preserve">
     <value>Tamaño de la aplicación</value>

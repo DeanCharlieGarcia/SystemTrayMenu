@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="About SystemTrayMenu" xml:space="preserve">
-    <value>SystemTrayMenu 정보</value>
+  <data name="About HitNGone" xml:space="preserve">
+    <value>HitNGone 정보</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>좋아요</value>
@@ -174,8 +174,8 @@
   <data name="Frequently Asked Questions" xml:space="preserve">
     <value>자주 묻는 질문</value>
   </data>
-  <data name="Read the FAQ and then choose a root directory for SystemTrayMenu." xml:space="preserve">
-    <value>FAQ를 읽고 SystemTrayMenu의 루트 디렉토리를 선택하십시오.</value>
+  <data name="Read the FAQ and then choose a root directory for HitNGone." xml:space="preserve">
+    <value>FAQ를 읽고 HitNGone의 루트 디렉토리를 선택하십시오.</value>
   </data>
   <data name="Select directory" xml:space="preserve">
     <value>디렉터리 선택</value>
@@ -456,7 +456,7 @@
   <data name="Icon size" xml:space="preserve">
     <value>아이콘 크기</value>
   </data>
-  <data name="Support SystemTrayMenu" xml:space="preserve">
+  <data name="Support HitNGone" xml:space="preserve">
     <value>지원 시스템TrayMenu</value>
   </data>
   <data name="Fading" xml:space="preserve">
@@ -534,8 +534,8 @@
   <data name="New version available!" xml:space="preserve">
     <value>새로운 버전을 사용할 수 있습니다!</value>
   </data>
-  <data name="You have the latest version of SystemTrayMenu!" xml:space="preserve">
-    <value>최신 버전의 SystemTrayMenu가 있습니다!</value>
+  <data name="You have the latest version of HitNGone!" xml:space="preserve">
+    <value>최신 버전의 HitNGone가 있습니다!</value>
   </data>
   <data name="Application size" xml:space="preserve">
     <value>신청 규모</value>

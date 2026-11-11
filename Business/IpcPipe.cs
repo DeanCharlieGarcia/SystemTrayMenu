@@ -1,11 +1,11 @@
-﻿// <copyright file="IpcPipe.cs" company="PlaceholderCompany">
+// <copyright file="IpcPipe.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2023-2023 Peter Kirmeier
 // Based on example: https://learn.microsoft.com/en-us/dotnet/standard/io/how-to-use-named-pipes-for-network-interprocess-communication
 
-namespace SystemTrayMenu.Business
+namespace HitNGone.Business
 {
     using System;
     using System.IO;
@@ -13,7 +13,7 @@ namespace SystemTrayMenu.Business
     using System.Reflection;
     using System.Text;
     using System.Threading;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.Utilities;
 
     internal class IpcPipe : IDisposable
     {
@@ -54,7 +54,7 @@ namespace SystemTrayMenu.Business
         internal string? SendToServer(string request)
         {
             string? response = null;
-            NamedPipeClientStream pipeClient = new(pipeName);
+            using NamedPipeClientStream pipeClient = new(pipeName);
 
             // Wait a bit in case server is restarting
             pipeClient.Connect(500);
@@ -73,8 +73,6 @@ namespace SystemTrayMenu.Business
                 Log.Info($"IPC client pipe error: Invalid hello: \"" + hello + "\"");
             }
 
-            pipeClient.Dispose();
-
             return response;
         }
 
@@ -90,8 +88,8 @@ namespace SystemTrayMenu.Business
                 {
                     // Stupid workaround for WaitForConnection as it will not unblock when pipe gets closed or disposed.
                     // See: https://stackoverflow.com/questions/607872/what-is-a-good-way-to-shutdown-threads-blocked-on-namedpipeserverwaitforconnect
-                    ManualResetEvent connectEvent = new (false);
-                    pipe.BeginWaitForConnection(ar => { connectEvent.Set(); }, null);
+                    IAsyncResult connection = pipe.BeginWaitForConnection(null, null);
+                    using WaitHandle connectEvent = connection.AsyncWaitHandle;
                     if (WaitHandle.WaitAny(new WaitHandle[] { connectEvent, ipc.cancelEvent! }) == 1)
                     {
                         ipc.serverPipe = null;
@@ -99,6 +97,7 @@ namespace SystemTrayMenu.Business
                         return;
                     }
 
+                    pipe.EndWaitForConnection(connection);
                     IpcPipeStream stream = new(pipe);
 
                     // Send indicator who we are, just for sanity checking
@@ -119,7 +118,7 @@ namespace SystemTrayMenu.Business
         }
 
         // Defines the data protocol for reading and writing strings on our stream
-        private class IpcPipeStream
+        internal sealed class IpcPipeStream
         {
             private readonly Stream ioStream;
             private readonly UnicodeEncoding streamEncoding = new();
@@ -131,29 +130,21 @@ namespace SystemTrayMenu.Business
 
             internal string ReadString()
             {
-                int len = 0;
+                byte[] header = new byte[4];
+                ReadExactly(header);
+                int len = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
+                ValidateLength(len);
 
-                // Receive 32 bit message size
-                len += ioStream.ReadByte() >> 24;
-                len += ioStream.ReadByte() >> 16;
-                len += ioStream.ReadByte() >> 8;
-                len += ioStream.ReadByte() >> 0;
-
-                // Receive message
                 byte[] inBuffer = new byte[len];
-                ioStream.Read(inBuffer, 0, len);
-
+                ReadExactly(inBuffer);
                 return streamEncoding.GetString(inBuffer);
             }
 
             internal int WriteString(string outString)
             {
+                int len = streamEncoding.GetByteCount(outString);
+                ValidateLength(len);
                 byte[] outBuffer = streamEncoding.GetBytes(outString);
-                int len = outBuffer.Length;
-                if (len > int.MaxValue)
-                {
-                    throw new InternalBufferOverflowException("More data than available space withing an IPC message");
-                }
 
                 // Send 32 bit message size
                 ioStream.WriteByte((byte)((len >> 24) & 0xFF));
@@ -166,7 +157,31 @@ namespace SystemTrayMenu.Business
 
                 ioStream.Flush();
 
-                return outBuffer.Length + 2;
+                return outBuffer.Length + 4;
+            }
+
+            private static void ValidateLength(int length)
+            {
+                // This pipe only exchanges commands; reject corrupt or oversized frames.
+                if (length < 0 || length > 1024 * 1024 || (length & 1) != 0)
+                {
+                    throw new InvalidDataException("Invalid IPC message length.");
+                }
+            }
+
+            private void ReadExactly(byte[] buffer)
+            {
+                int offset = 0;
+                while (offset < buffer.Length)
+                {
+                    int read = ioStream.Read(buffer, offset, buffer.Length - offset);
+                    if (read == 0)
+                    {
+                        throw new EndOfStreamException("IPC message ended before the complete frame was received.");
+                    }
+
+                    offset += read;
+                }
             }
         }
     }

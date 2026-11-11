@@ -1,8 +1,8 @@
-﻿// <copyright file="ShellContextMenu.cs" company="PlaceholderCompany">
+// <copyright file="ShellContextMenu.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-namespace SystemTrayMenu.UserInterface
+namespace HitNGone.UserInterface
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -13,11 +13,11 @@ namespace SystemTrayMenu.UserInterface
     using System.Windows.Input;
     using System.Windows.Interop;
 
-    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1124:Do not use regions", Justification = "Mark SystemTrayMenu modifications made to original source.")]
+    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1124:Do not use regions", Justification = "Mark HitNGone modifications made to original source.")]
 
     /// <summary>
     /// source: https://www.codeproject.com/Articles/22012/Explorer-Shell-Context-Menu
-    /// modified to fit SystemTrayMenu.
+    /// modified to fit HitNGone.
     ///
     /// "Stand-alone" shell context menu
     ///
@@ -796,8 +796,8 @@ namespace SystemTrayMenu.UserInterface
                     CmdFirst,
                     CmdLast,
                     CMF.EXPLORE | CMF.NORMAL | ((Keyboard.Modifiers & ModifierKeys.Shift) != 0 ? CMF.EXTENDEDVERBS : 0));
-                Marshal.QueryInterface(iContextMenuPtr, ref iidIContextMenu2, out iContextMenuPtr2);
-                Marshal.QueryInterface(iContextMenuPtr, ref iidIContextMenu3, out iContextMenuPtr3);
+                Marshal.QueryInterface(iContextMenuPtr, in iidIContextMenu2, out iContextMenuPtr2);
+                Marshal.QueryInterface(iContextMenuPtr, in iidIContextMenu3, out iContextMenuPtr3);
 
                 oContextMenu2 = (IContextMenu2)Marshal.GetTypedObjectForIUnknown(iContextMenuPtr2, typeof(IContextMenu2));
                 oContextMenu3 = (IContextMenu3)Marshal.GetTypedObjectForIUnknown(iContextMenuPtr3, typeof(IContextMenu3));

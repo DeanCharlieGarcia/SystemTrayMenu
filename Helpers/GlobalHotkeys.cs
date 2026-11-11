@@ -1,10 +1,10 @@
-﻿// <copyright file="GlobalHotkeys.cs" company="PlaceholderCompany">
+// <copyright file="GlobalHotkeys.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 //
 // Copyright (c) 2023-2023 Peter Kirmeier
 
-namespace SystemTrayMenu.Helpers
+namespace HitNGone.Helpers
 {
     using System;
     using System.Collections.Generic;
@@ -12,8 +12,8 @@ namespace SystemTrayMenu.Helpers
     using System.Windows;
     using System.Windows.Input;
     using System.Windows.Interop;
-    using SystemTrayMenu.DllImports;
-    using SystemTrayMenu.Utilities;
+    using HitNGone.DllImports;
+    using HitNGone.Utilities;
 
     internal static class GlobalHotkeys
     {
@@ -63,11 +63,12 @@ namespace SystemTrayMenu.Helpers
 
         internal static (ModifierKeys Modifiers, Key Key) ModifiersAndKeyFromInvariantString(string hotKeyString)
         {
-            if (string.IsNullOrEmpty(hotKeyString))
+            if (string.IsNullOrWhiteSpace(hotKeyString))
             {
                 return (ModifierKeys.None, Key.None);
             }
 
+            hotKeyString = hotKeyString.Trim();
             string? modifiersString;
             string keyString;
             if (hotKeyString.Contains('+'))
@@ -87,14 +88,37 @@ namespace SystemTrayMenu.Helpers
             {
                 if (modifiersString != null)
                 {
-                    modifiers = (ModifierKeys?)new ModifierKeysConverter().ConvertFromInvariantString(modifiersString) ?? ModifierKeys.None;
+                    string[] parts = modifiersString.Split('+', StringSplitOptions.TrimEntries);
+                    for (int i = 0; i < parts.Length; i++)
+                    {
+                        if (parts[i].Length == 0)
+                        {
+                            throw new FormatException("Empty hotkey modifier.");
+                        }
+
+                        if (parts[i].Equals("Strg", StringComparison.OrdinalIgnoreCase))
+                        {
+                            parts[i] = "Ctrl";
+                        }
+                        else if (parts[i].Equals("Umschalt", StringComparison.OrdinalIgnoreCase))
+                        {
+                            parts[i] = "Shift";
+                        }
+                    }
+
+                    modifiers = (ModifierKeys?)new ModifierKeysConverter().ConvertFromInvariantString(string.Join('+', parts)) ?? ModifierKeys.None;
                 }
 
-                key = (Key?)new KeyConverter().ConvertFromInvariantString(keyString) ?? Key.None;
+                key = (Key?)new KeyConverter().ConvertFromInvariantString(keyString.Trim()) ?? Key.None;
             }
             catch (Exception ex)
             {
                 Log.Info("Could not parse key and modifiers for \"" + hotKeyString + "\" with modifiers. Cause: " + ex.Message);
+                return (ModifierKeys.None, Key.None);
+            }
+
+            if (key == Key.None)
+            {
                 return (ModifierKeys.None, Key.None);
             }
 
@@ -400,6 +424,12 @@ namespace SystemTrayMenu.Helpers
 
             public void Register(ModifierKeys modifiers, Key key)
             {
+                if (key == Key.None)
+                {
+                    Unregister();
+                    return;
+                }
+
                 if (Registration == null)
                 {
                     Registration = GlobalHotkeys.Register(modifiers, key);
@@ -418,7 +448,18 @@ namespace SystemTrayMenu.Helpers
 
             public void Register(string hotKeyString)
             {
+                if (string.IsNullOrWhiteSpace(hotKeyString))
+                {
+                    Unregister();
+                    return;
+                }
+
                 var (modifiers, key) = ModifiersAndKeyFromInvariantString(hotKeyString);
+                if (key == Key.None)
+                {
+                    throw new InvalidOperationException("Invalid hotkey: " + hotKeyString);
+                }
+
                 Register(modifiers, key);
             }
 
